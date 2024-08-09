@@ -7,7 +7,10 @@
 UENUM(BlueprintType)
 enum class ETaskResult : uint8
 {
+	// Task is executed Successly
 	ETR_Success,
-	ETR_Attacked,
-	ETR_Parried,
+	// Player Attack Detected While Task
+	ETR_AttackDetected,
+	// Player is Far Away Enoughly (User Defined)
+	ETR_Distanced_Far,
 };
