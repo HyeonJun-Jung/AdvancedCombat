@@ -6,12 +6,16 @@
 #include "Character/CharacterBase_AnimInstance.h"
 #include "Samurai_AnimInstance.generated.h"
 
-/**
- * 
- */
+DECLARE_MULTICAST_DELEGATE(FSpawnSlash)
+
 UCLASS()
 class ADVANCEDCOMBAT_API USamurai_AnimInstance : public UCharacterBase_AnimInstance
 {
 	GENERATED_BODY()
 	
+public:
+	UFUNCTION()
+	void AnimNotify_SpawnSlash();
+
+	FSpawnSlash Delegate_SpawnSlash;
 };

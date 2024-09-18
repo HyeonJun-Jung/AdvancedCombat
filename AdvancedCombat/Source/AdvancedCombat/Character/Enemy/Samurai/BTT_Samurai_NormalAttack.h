@@ -11,6 +11,7 @@ class ADVANCEDCOMBAT_API UBTT_Samurai_NormalAttack : public UBTTask_ACBase
 {
 	GENERATED_BODY()
 	
+public:
 	UBTT_Samurai_NormalAttack();
 
 protected:

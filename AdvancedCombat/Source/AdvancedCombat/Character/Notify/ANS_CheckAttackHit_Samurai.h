@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimNotifies/AnimNotifyState.h"
+#include "ACEnums.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "ANS_CheckAttackHit_Samurai.generated.h"
 
 UCLASS()
@@ -27,7 +29,16 @@ public:
 	float Radius = 30.f;
 
 	UPROPERTY(EditAnywhere, Category = Damage)
+	TEnumAsByte<EDrawDebugTrace::Type> DebugType = EDrawDebugTrace::None;
+
+	UPROPERTY(EditAnywhere, Category = Damage)
+	EDamageType DamageType = EDamageType::GuardableDamage;
+
+	UPROPERTY(EditAnywhere, Category = Damage)
 	float Damage = 10.f;
 
 	TArray<AActor*> m_DamagedActors;
+
+public:
+	TSubclassOf<UDamageType> GetDamageClass();
 };

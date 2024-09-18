@@ -95,6 +95,8 @@ void AAdvancedCombatCharacter::SetupPlayerInputComponent(UInputComponent* Player
 
 void AAdvancedCombatCharacter::Move(const FInputActionValue& Value)
 {
+	if (!bMoveable) return;
+
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
 

@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/DamageType.h"
 #include "Perception/AISense_Damage.h"
+#include "Character/DamageType/DamageTypes.h"
 
 void UANS_CheckAttackHit_Samurai::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
@@ -26,7 +27,7 @@ void UANS_CheckAttackHit_Samurai::NotifyTick(USkeletalMeshComponent* MeshComp, U
     ignore.Emplace(MeshComp->GetOwner());
 
     UKismetSystemLibrary::SphereTraceMultiForObjects(MeshComp, Start, End, 20, objectType,
-        false, ignore, EDrawDebugTrace::None, hitResults, true);
+        false, ignore, DebugType.GetValue(), hitResults, true);
 
     for (FHitResult hit : hitResults)
     {
@@ -41,16 +42,11 @@ void UANS_CheckAttackHit_Samurai::NotifyTick(USkeletalMeshComponent* MeshComp, U
             if (actor)
             {
                 UGameplayStatics::ApplyPointDamage(DamagedActor, 10, hit.ImpactNormal, hit,
-                    actor->GetInstigatorController(), actor, UDamageType::StaticClass());
+                    actor->GetInstigatorController(), actor, GetDamageClass());
             }
 
             UAISense_Damage::ReportDamageEvent(DamagedActor, DamagedActor, actor,
                 10, DamagedActor->GetActorLocation(), hit.ImpactPoint);
-        }
-
-        if (Player)
-        {
-
         }
     }
 }
@@ -58,4 +54,29 @@ void UANS_CheckAttackHit_Samurai::NotifyTick(USkeletalMeshComponent* MeshComp, U
 void UANS_CheckAttackHit_Samurai::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
     m_DamagedActors.Empty();
+}
+
+TSubclassOf<UDamageType> UANS_CheckAttackHit_Samurai::GetDamageClass()
+{
+    switch (DamageType)
+    {
+    case EDamageType::NormalDamage:
+        return UNormalDamage::StaticClass();
+        break;
+    case EDamageType::GuardableDamage:
+        return  UGuardableDamage::StaticClass();
+        break;
+    case EDamageType::ParryableDamage:
+        return UParryableDamage::StaticClass();
+        break;
+    case EDamageType::UnbreakableDamage:
+        return UUnbreakableDamage::StaticClass();
+        break;
+    case EDamageType::StingDamage:
+        return UStingDamage::StaticClass();
+        break;
+    default:
+        break;
+    }
+    return UDamageType::StaticClass();
 }

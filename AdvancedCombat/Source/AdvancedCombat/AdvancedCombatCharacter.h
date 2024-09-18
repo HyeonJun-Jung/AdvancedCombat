@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
+#include "Character/Character_Base.h"
 #include "Logging/LogMacros.h"
 #include "AdvancedCombatCharacter.generated.h"
 
@@ -16,7 +16,7 @@ struct FInputActionValue;
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config=Game)
-class AAdvancedCombatCharacter : public ACharacter
+class AAdvancedCombatCharacter : public ACharacter_Base
 {
 	GENERATED_BODY()
 
@@ -49,12 +49,14 @@ public:
 	
 
 protected:
-
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+
+protected:
+	bool bMoveable = true;
 			
 
 protected:
