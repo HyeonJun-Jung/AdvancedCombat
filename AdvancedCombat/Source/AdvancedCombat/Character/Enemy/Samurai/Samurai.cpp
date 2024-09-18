@@ -5,6 +5,9 @@
 #include "Character/Enemy/Samurai/Samurai_AnimInstance.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Actor/ACProjectile.h"
+#include "Character/Player/CombatPlayerCharacter.h"
+#include "Engine/DamageEvents.h"
+#include "Character/DamageType/DamageTypes.h"
 
 void ASamurai::BeginPlay()
 {
@@ -14,6 +17,7 @@ void ASamurai::BeginPlay()
 	if (SamuraiAnimInst)
 	{
 		SamuraiAnimInst->Delegate_SpawnSlash.AddUObject(this, &ASamurai::SpawnSlash);
+		SamuraiAnimInst->Delegate_SpawnIdleSlash.AddUObject(this, &ASamurai::SpawnIdleSlash);
 	}
 }
 
@@ -59,6 +63,11 @@ void ASamurai::RandomComboAttack()
 
 void ASamurai::ComboAttack(int ComboIdx)
 {
+	if (ComboIdx == 0)
+	{
+		ComboIdx = UKismetMathLibrary::RandomIntegerInRange(1, 3);
+	}
+
 	switch (ComboIdx)
 	{
 	case 1:
@@ -153,10 +162,91 @@ void ASamurai::SpawnSlash()
 	}
 }
 
+void ASamurai::SpawnIdleSlash()
+{
+	if (IdleSlashActorClass)
+	{
+		FVector Location_Katana = GetMesh()->GetSocketLocation(FName("Weapon_Katana"));
+		FRotator Rotation_Katana = GetMesh()->GetSocketRotation(FName("Weapon_Katana"));
+		FRotator Rotation_Slash = FRotator(0, 0, Rotation_Katana.Roll + Slash_AdditionalRoll);
+
+		GetWorld()->SpawnActor<AActor>(IdleSlashActorClass,
+			Location_Katana, Rotation_Slash + GetActorRotation());
+	}
+}
+
 void ASamurai::Dodge_Bwd()
 {
 	if (AnimInst && DodgeMontage_Bwd)
 	{
 		AnimInst->Montage_Play(DodgeMontage_Bwd);
+	}
+}
+
+bool ASamurai::IsParryable()
+{
+	if(AnimInst->GetCurrentActiveMontage())
+		return false;
+	return true;
+}
+
+float ASamurai::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+
+	ACombatPlayerCharacter* combatCharacter = Cast<ACombatPlayerCharacter>(DamageCauser);
+	if (combatCharacter)
+	{
+		DealWithCombatCharacter(Damage, DamageEvent, EventInstigator, combatCharacter);
+		return Damage;
+	}
+
+	return Damage;
+}
+
+void ASamurai::DealWithCombatCharacter(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, ACombatPlayerCharacter* CombatCharacter)
+{
+	FHitResult hitResult;
+	FVector ImpulseDir;
+
+	if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+	{
+		FPointDamageEvent* PointDamageEvent = (FPointDamageEvent*)&DamageEvent;
+		PointDamageEvent->GetBestHitInfo(this, EventInstigator, hitResult, ImpulseDir);
+	}
+	else if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))
+	{
+		FRadialDamageEvent* RadialDamageEvent = (FRadialDamageEvent*)&DamageEvent;
+		RadialDamageEvent->GetBestHitInfo(this, EventInstigator, hitResult, ImpulseDir);
+	}
+	else
+	{
+		DamageEvent.GetBestHitInfo(this, EventInstigator, hitResult, ImpulseDir);
+	}
+
+	EACHitReactDirection hitDirection = GetHitReactDirection(hitResult.ImpactPoint, CombatCharacter);
+	EACHitReactDirection hitDir_RightLeft = GetRightOrLeft(hitResult.ImpactPoint, CombatCharacter);
+
+	if (IsParryable())
+	{
+		if (DamageEvent.DamageTypeClass == UGuardableDamage::StaticClass())
+		{
+			if (hitDir_RightLeft == EACHitReactDirection::Right)
+			{
+				AnimInst->Montage_Play(GuardSuccessMontage_Right);
+			}
+			else
+			{
+				AnimInst->Montage_Play(GuardSuccessMontage_Left);
+			}
+			LaunchCharacter(GetActorForwardVector() * -750, false, false);
+		}
+		else if (DamageEvent.DamageTypeClass == UParryableDamage::StaticClass())
+		{
+			CombatCharacter->Delegate_Parried.Broadcast();
+			CombatCharacter->ShowParriedReaction(hitDirection);
+
+			AnimInst->Montage_Play(ParryMontage);
+		}
 	}
 }

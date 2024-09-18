@@ -4,11 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
+#include "ACEnums.h"
 #include "BTT_Samurai_ComboAttack.generated.h"
 
 UENUM(BlueprintType)
 enum class ESamuraiComboType : uint8
 {
+	Random,
 	first,
 	second,
 	third
@@ -48,4 +50,7 @@ public:
 public:
 	UFUNCTION()
 	void OnAttackParried();
+
+private:
+	ETaskResult BBTaskResult = ETaskResult::ETR_Success;
 };

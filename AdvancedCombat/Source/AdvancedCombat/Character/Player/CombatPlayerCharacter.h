@@ -125,6 +125,13 @@ public:
 	void DefenseStart();
 	void DefenseEnd();
 
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float ParryTime = 0.2f;
+
+private:
+	FTimerHandle TimerHandle_Parryable;
+
 
 	/* Damaged */
 public:

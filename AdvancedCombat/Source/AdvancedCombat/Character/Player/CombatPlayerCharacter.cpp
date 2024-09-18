@@ -19,6 +19,7 @@
 #include "Character/DamageType/DamageTypes.h"
 #include "Character/Enemy/Samurai/Samurai.h"
 #include "Component/LockOnComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 ACombatPlayerCharacter::ACombatPlayerCharacter()
 {
@@ -277,11 +278,22 @@ void ACombatPlayerCharacter::DefenseStart()
 			AnimInst->Montage_Stop(0.1);
 		}
 
-		TagContainer.AddTag(TAG_CHARACTER_STATE_DEFENSING);
+		// Defense
 		CombatAnimInst->SetDefensing(true);
-		/*GetCharacterMovement()->bUseControllerDesiredRotation = true;
-		GetCharacterMovement()->bOrientRotationToMovement = false;
-		bUseControllerRotationYaw = true;*/
+		TagContainer.AddTag(TAG_CHARACTER_STATE_DEFENSING);
+
+		// Parry
+		if (!TimerHandle_Parryable.IsValid())
+		{
+			TagContainer.AddTag(TAG_CHARACTER_STATE_PARRYABLE);
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_Parryable,
+				[&]()
+				{
+					UE_LOG(LogTemp, Display, TEXT("Parry End."));
+					TagContainer.RemoveTag(TAG_CHARACTER_STATE_PARRYABLE);
+				},
+				ParryTime, false);
+		}
 	}
 }
 
@@ -289,11 +301,12 @@ void ACombatPlayerCharacter::DefenseEnd()
 {
 	if (CombatAnimInst)
 	{
-		TagContainer.RemoveTag(TAG_CHARACTER_STATE_DEFENSING);
+		// Defense
 		CombatAnimInst->SetDefensing(false);
-		/*GetCharacterMovement()->bUseControllerDesiredRotation = false;
-		GetCharacterMovement()->bOrientRotationToMovement = true;
-		bUseControllerRotationYaw = false;*/
+
+		// Parry
+		TagContainer.RemoveTag(TAG_CHARACTER_STATE_DEFENSING);
+		TimerHandle_Parryable.Invalidate();
 	}
 }
 
@@ -342,7 +355,16 @@ void ACombatPlayerCharacter::DealWithSamurai(float Damage, FDamageEvent const& D
 	if (hitDirection != EACHitReactDirection::Back
 		&& TagContainer.HasTag(TAG_CHARACTER_STATE_DEFENSING))
 	{
-		if (DamageEvent.DamageTypeClass == UGuardableDamage::StaticClass())
+		if (DamageEvent.DamageTypeClass == UParryableDamage::StaticClass()
+			&& TagContainer.HasTag(TAG_CHARACTER_STATE_PARRYABLE))
+		{
+			Samurai->Delegate_Parried.Broadcast();
+			Samurai->ShowParriedReaction(hitDirection);
+
+			AnimInst->Montage_Play(ParryMontage);
+		}
+		else if (DamageEvent.DamageTypeClass == UParryableDamage::StaticClass()
+			|| DamageEvent.DamageTypeClass == UGuardableDamage::StaticClass())
 		{
 			if (hitDir_RightLeft == EACHitReactDirection::Right)
 			{
@@ -358,13 +380,6 @@ void ACombatPlayerCharacter::DealWithSamurai(float Damage, FDamageEvent const& D
 				AnimInst->Montage_Play(GuardSuccessMontage_Left);
 				LaunchCharacter(GetActorForwardVector() * -1000, false, false);
 			}
-		}
-		else if (DamageEvent.DamageTypeClass == UParryableDamage::StaticClass())
-		{
-			Samurai->Delegate_Parried.Broadcast();
-			Samurai->ShowParriedReaction(hitDirection);
-
-			AnimInst->Montage_Play(ParryMontage);
 		}
 		else if (DamageEvent.DamageTypeClass == UStingDamage::StaticClass())
 		{

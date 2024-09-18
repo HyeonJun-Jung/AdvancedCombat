@@ -11,7 +11,8 @@ enum class ETaskResult : uint8
 	ETR_Success,
 	// Parry Detected while Task
 	ETR_Parried,
-	// 
+	// Take Damage while Task
+	ETR_Damaged,
 };
 
 UENUM(BlueprintType)

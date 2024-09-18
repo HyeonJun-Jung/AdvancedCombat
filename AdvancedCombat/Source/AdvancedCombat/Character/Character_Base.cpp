@@ -42,6 +42,8 @@ float ACharacter_Base::TakeDamage(float Damage, FDamageEvent const& DamageEvent,
 {
 	Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 
+	Delegate_TakeDamage.Broadcast();
+
 	return Damage;
 }
 

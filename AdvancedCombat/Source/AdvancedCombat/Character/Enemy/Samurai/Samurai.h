@@ -6,40 +6,12 @@
 #include "Character/Enemy/Enemy_Base.h"
 #include "Samurai.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class ADVANCEDCOMBAT_API ASamurai : public AEnemy_Base
 {
 	GENERATED_BODY()
-	
-protected:
-	virtual void BeginPlay() override;
 
 public:
-	class USamurai_AnimInstance* SamuraiAnimInst;
-
-public:
-	void NormalAttack_Left();
-	void NormalAttack_Right();
-
-	// Attack
-	void RandomComboAttack();
-	void ComboAttack(int ComboIdx);
-
-	// Special Attack
-	void SpecialAttack(int AttackIdx);
-	void JumpAttack();
-	void StingFailed();
-
-	UFUNCTION()
-	void SpawnSlash();
-
-	// Dodge
-	void Dodge_Bwd();
-
-protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage|Attack")
 	UAnimMontage* Montage_NormalAttack_Left;
 
@@ -73,7 +45,51 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage|Special Attack")
 	TSubclassOf<class AACProjectile> SlashActorClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage|Special Attack")
+	TSubclassOf<class AActor> IdleSlashActorClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage|Special Attack")
+	float Slash_AdditionalRoll = 0.f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage|Jump Attack")
 	UAnimMontage* Montage_JumpAttack;
 
+	
+protected:
+	virtual void BeginPlay() override;
+
+public:
+	class USamurai_AnimInstance* SamuraiAnimInst;
+
+
+	/* Attack */
+public:
+	void NormalAttack_Left();
+	void NormalAttack_Right();
+
+	// Attack
+	void RandomComboAttack();
+	void ComboAttack(int ComboIdx);
+
+	// Special Attack
+	void SpecialAttack(int AttackIdx);
+	void JumpAttack();
+	void StingFailed();
+
+	UFUNCTION()
+	void SpawnSlash();
+
+	UFUNCTION()
+	void SpawnIdleSlash();
+
+	// Dodge
+	void Dodge_Bwd();
+
+
+	/* Damaged */
+public:
+	bool IsParryable();
+
+	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	void DealWithCombatCharacter(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, class ACombatPlayerCharacter* CombatCharacter);
 };

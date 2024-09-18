@@ -9,6 +9,7 @@
 #include "Character_Base.generated.h"
 
 DECLARE_MULTICAST_DELEGATE(FAttackParried)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FTakeDamage);
 
 UCLASS()
 class ADVANCEDCOMBAT_API ACharacter_Base : public ACharacter
@@ -87,6 +88,9 @@ public:
 
 public:
 	FAttackParried Delegate_Parried;
+
+	UPROPERTY(BlueprintAssignable)
+	FTakeDamage Delegate_TakeDamage;
 
 public:
 	UPROPERTY()

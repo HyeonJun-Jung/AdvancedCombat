@@ -26,7 +26,7 @@ void UANS_CheckAttackHit_Samurai::NotifyTick(USkeletalMeshComponent* MeshComp, U
     TArray<AActor*> ignore;
     ignore.Emplace(MeshComp->GetOwner());
 
-    UKismetSystemLibrary::SphereTraceMultiForObjects(MeshComp, Start, End, 20, objectType,
+    UKismetSystemLibrary::SphereTraceMultiForObjects(MeshComp, Start, End, Radius, objectType,
         false, ignore, DebugType.GetValue(), hitResults, true);
 
     for (FHitResult hit : hitResults)

@@ -24,12 +24,13 @@ EBTNodeResult::Type UBTT_Samurai_ComboAttack::ExecuteTask(UBehaviorTreeComponent
 	if (!Samurai || !Samurai->AnimInst) return EBTNodeResult::Failed;
 
 	// Clean Task Values
+	BBTaskResult = ETaskResult::ETR_Success;
 	IsMontageIntrrupted = false;
 	IsMontagePlaying = true;
 	CleanUp();
 
 	// Play Montage
-	Samurai->ComboAttack(static_cast<int>(ComboType) + 1);
+	Samurai->ComboAttack(static_cast<int>(ComboType));
 
 	// Binding Function
 	Samurai->AnimInst->OnMontageEnded.AddDynamic(this, &UBTT_Samurai_ComboAttack::OnIntrruptedCallback);
@@ -44,6 +45,11 @@ void UBTT_Samurai_ComboAttack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8
 
 	if (!IsMontagePlaying)
 	{
+		if (BlackBoard)
+		{
+			BlackBoard->SetValueAsEnum(FName("TaskResult"), static_cast<int>(BBTaskResult));
+		}
+
 		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 	}
 }
@@ -76,11 +82,6 @@ void UBTT_Samurai_ComboAttack::OnAttackParried()
 {
 	UE_LOG(LogTemp, Warning, TEXT("%s : Attack Parried."), *GetName());
 	IsMontagePlaying = false;
-
-	if (BlackBoard)
-	{
-		BlackBoard->SetValueAsEnum(FName("TaskResult"), static_cast<int>(ETaskResult::ETR_Parried));
-	}
-
+	BBTaskResult = ETaskResult::ETR_Parried;
 }
 

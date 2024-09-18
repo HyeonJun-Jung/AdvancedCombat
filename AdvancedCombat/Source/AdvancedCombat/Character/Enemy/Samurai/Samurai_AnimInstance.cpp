@@ -7,3 +7,8 @@ void USamurai_AnimInstance::AnimNotify_SpawnSlash()
 {
 	Delegate_SpawnSlash.Broadcast();
 }
+
+void USamurai_AnimInstance::AnimNotify_SpawnIdleSlash()
+{
+	Delegate_SpawnIdleSlash.Broadcast();
+}
