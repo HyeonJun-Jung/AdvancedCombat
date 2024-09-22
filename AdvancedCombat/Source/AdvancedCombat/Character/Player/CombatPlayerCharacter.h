@@ -52,12 +52,15 @@ public:
 	// To add mapping context
 	virtual void BeginPlay();
 
+public:
+	FORCEINLINE class UCombatPlayer_AnimInstance* GetCombatAnimInst() { return CombatAnimInst; }
+
 private:
 	class APlayerController* PlayerController;
 	class UCombatPlayer_AnimInstance* CombatAnimInst;
 
 	/* Movement Input */
-private:
+public:
 	void DisableMovementInput(float Duration);
 
 private:

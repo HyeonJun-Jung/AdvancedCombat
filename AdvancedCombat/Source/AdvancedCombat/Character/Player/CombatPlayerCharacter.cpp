@@ -73,7 +73,7 @@ void ACombatPlayerCharacter::BeginPlay()
 		CombatAnimInst->OnMontageEnded.AddUniqueDynamic(this, &ACombatPlayerCharacter::MontageEnded);
 		CombatAnimInst->Delegate_AttackInputStart.AddUObject(this, &ACombatPlayerCharacter::AttackInputStart);
 		CombatAnimInst->Delegate_CheckDoNextAttack.AddUObject(this, &ACombatPlayerCharacter::CheckShouldAttack);
-		CombatAnimInst->Delegate_DashAttack .AddUObject(this, &ACombatPlayerCharacter::DashAttack);
+		CombatAnimInst->Delegate_DashAttack.AddUObject(this, &ACombatPlayerCharacter::DashAttack);
 	}
 
 	LandedDelegate.AddUniqueDynamic(this, &ACombatPlayerCharacter::Landed);
