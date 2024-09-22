@@ -33,14 +33,61 @@ USamuraiState::~USamuraiState()
 void USamuraiState::EnterState(ACombatPlayerCharacter* InCombatCharacter)
 {
 	Super::EnterState(InCombatCharacter);
+	SetUpDelegate();
 }
 
 void USamuraiState::ExitState()
 {
+	Super::ExitState();
+	CleanUpDelegate();
 }
 
 void USamuraiState::SetUpDelegate()
 {
+	if (!AnimInst)
+	{
+		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to get UCombatPlayer_AnimInstance."), *GetNameSafe(this));
+	}
+	else
+	{
+		AnimInst->OnMontageEnded.AddUniqueDynamic(this, &USamuraiState::MontageEnded);
+		AnimInst->Delegate_AttackInputStart.AddUObject(this, &USamuraiState::AttackInputStart);
+		AnimInst->Delegate_CheckDoNextAttack.AddUObject(this, &USamuraiState::CheckShouldAttack);
+		AnimInst->Delegate_DashAttack.AddUObject(this, &USamuraiState::DashAttack);
+	}
+}
+
+void USamuraiState::CleanUpDelegate()
+{
+	if (!AnimInst)
+	{
+		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to get UCombatPlayer_AnimInstance."), *GetNameSafe(this));
+	}
+	else
+	{
+		AnimInst->OnMontageEnded.RemoveDynamic(this, &USamuraiState::MontageEnded);
+		AnimInst->Delegate_AttackInputStart.RemoveAll(this);
+		AnimInst->Delegate_CheckDoNextAttack.RemoveAll(this);
+		AnimInst->Delegate_DashAttack.RemoveAll(this);
+	}
+}
+
+void USamuraiState::MontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	CombatCharacter->GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	CombatCharacter->GetCharacterMovement()->bOrientRotationToMovement = false;
+	CombatCharacter->bUseControllerRotationYaw = true;
+
+	if (CurrentCombo == 0)
+		CombatCharacter->TagContainer.RemoveTag(TAG_CHARACTER_STATE_ATTACKING);
+
+	if (!bInterrupted)
+	{
+		CombatCharacter->TagContainer.RemoveTag(TAG_CHARACTER_STATE_ATTACKING);
+		CombatCharacter->TagContainer.RemoveTag(TAG_CHARACTER_STATE_DAMAGED);
+		CombatCharacter->TagContainer.RemoveTag(TAG_CHARACTER_STATE_DODGING);
+		ResetCombo();
+	}
 }
 
 bool USamuraiState::IsDodgeable()
@@ -206,9 +253,6 @@ void USamuraiState::DefenseEnd()
 float USamuraiState::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	float damage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
-
-	if (CombatCharacter->bInvincible)
-		return damage;
 
 	ResetCombo();
 

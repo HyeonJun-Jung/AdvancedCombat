@@ -59,18 +59,24 @@ private:
 	class APlayerController* PlayerController;
 	class UCombatPlayer_AnimInstance* CombatAnimInst;
 
+	/* Combat State */
+protected:
+	UPROPERTY()
+	class UCombatState* CombatState;
+
+	UPROPERTY()
+	class UCombatState* SamuraiState;
+
+	UPROPERTY(EditAnywhere, Category = "Combat State | Samurai")
+	TSubclassOf<class UCombatState> CombatStateClass_Samurai;
+
+
 	/* Movement Input */
 public:
 	void DisableMovementInput(float Duration);
 
 private:
 	FTimerHandle TimerHandle_DisableMovement;
-
-
-	/* Montage Ended */
-public:
-	UFUNCTION()
-	void MontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
 
 	/* Jump */
@@ -100,48 +106,16 @@ public:
 
 	/* Attack */
 public:
-	bool IsAttackable();
-
 	void Attack();
-	void DashAttack();
-
-	UFUNCTION()
-	void AttackInputStart();
-
-	UFUNCTION()
-	void CheckShouldAttack();
-
-	void ResetCombo();
-
-private:
-	int MaxCombo = 4;
-	int CurrentCombo = 0;
-	bool bCanAttackInput = false;
-	bool bShouldDoNextAttack = false;
-	bool bNextAttackChecking = false;
-	bool bShouldDoDashAttack = false;
 
 
 	/* Defense */
 public:
-	bool IsDefenseAble();
 	void DefenseStart();
 	void DefenseEnd();
-
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float ParryTime = 0.2f;
-
-private:
-	FTimerHandle TimerHandle_Parryable;
 
 
 	/* Damaged */
 public:
-	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
-	void DealWithSamurai(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, class ASamurai* Samurai);
-	void EnableInvincible(float Duration);
-
-	bool bInvincible = false;
-	FTimerHandle TimerHandle_Invincible;
+	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
 };

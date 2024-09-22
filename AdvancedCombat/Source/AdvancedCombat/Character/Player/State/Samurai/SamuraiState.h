@@ -73,28 +73,32 @@ public:
 	virtual ~USamuraiState();
 
 public:
-	virtual void EnterState(class ACombatPlayerCharacter* InCombatCharacter);
-	virtual void ExitState();
-	virtual void SetUpDelegate();
+	virtual void EnterState(class ACombatPlayerCharacter* InCombatCharacter) override;
+	virtual void ExitState() override;
+	virtual void SetUpDelegate() override;
+	virtual void CleanUpDelegate() override;
+
+	UFUNCTION()
+	void MontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
 	// Input List
 
 	/* Dodge */
 public:
-	virtual bool IsDodgeable();
-	virtual void Dodge();
+	virtual bool IsDodgeable() override;
+	virtual void Dodge() override;
 
 
 	/* Attack */
 public:
-	virtual bool IsAttackable();
-	virtual void Attack();
-	virtual void DashAttack();
-	virtual void ResetCombo();
+	virtual bool IsAttackable() override;
+	virtual void Attack() override;
+	virtual void DashAttack() override;
+	virtual void ResetCombo() override;
 
 	// Related to Notify
-	virtual void AttackInputStart();
-	virtual void CheckShouldAttack();
+	virtual void AttackInputStart() override;
+	virtual void CheckShouldAttack() override;
 
 private:
 	int MaxCombo = 4;
@@ -107,9 +111,9 @@ private:
 
 	/* Defense */
 public:
-	bool IsDefenseAble();
-	void DefenseStart();
-	void DefenseEnd();
+	virtual bool IsDefenseAble() override;
+	virtual void DefenseStart() override;
+	virtual void DefenseEnd() override;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)

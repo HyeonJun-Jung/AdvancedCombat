@@ -20,6 +20,7 @@ public:
 	virtual void EnterState(class ACombatPlayerCharacter* InCombatCharacter);
 	virtual void ExitState() { };
 	virtual void SetUpDelegate() { };
+	virtual void CleanUpDelegate() { };
 
 // Input List
 	
@@ -43,9 +44,9 @@ public:
 
 /* Defense */
 public:
-	bool IsDefenseAble() { return true; };
-	void DefenseStart() {};
-	void DefenseEnd() {};
+	virtual bool IsDefenseAble() { return true; };
+	virtual void DefenseStart() {};
+	virtual void DefenseEnd() {};
 
 
 /* Damage */
