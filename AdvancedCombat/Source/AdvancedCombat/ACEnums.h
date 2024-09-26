@@ -46,3 +46,35 @@ enum class EParryType : uint8
 	LeftToRight,
 	RightToLeft
 };
+
+UENUM(BlueprintType)
+enum class EItemCategory : uint8
+{
+	EIC_Item,
+	EIC_Equipment,
+	EIC_None
+};
+
+UENUM(BlueprintType)
+enum class EEquipCategory : uint8
+{
+	EEC_None,
+	EEC_Weapon,
+	EEC_Hat,
+	EEC_Chest,
+	EEC_Pants,
+	EEC_Shoes,
+	EEC_Cave,
+};
+
+UENUM(BlueprintType)
+enum class EWeaponType : uint8
+{
+	EWT_None,
+	EWT_Katana,
+	EWT_GreatSword,
+	EWT_SwordShield,
+	EWT_DualBlade,
+	EWT_Spear,
+	EWT_Bow,
+};
