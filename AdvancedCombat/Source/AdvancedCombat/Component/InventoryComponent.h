@@ -27,7 +27,7 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	// Interact
+	// Interact Setting
 public:
 	UPROPERTY(EditAnywhere)
 	float Interact_Range = 500;
@@ -35,11 +35,12 @@ public:
 	UPROPERTY(EditAnywhere)
 	float Interact_Radius = 50;
 
-	FInventoryUpdated Delegate_InventoryUpdated;
-
 private:
 	class IInteract_Interface* Interacting_Actor = nullptr;
 
+	// Inventory Delegate
+public:
+	FInventoryUpdated Delegate_InventoryUpdated;
 
 private:
 	UPROPERTY()

@@ -18,7 +18,7 @@ public:
 
 public:
 	virtual void EnterState(class ACombatPlayerCharacter* InCombatCharacter);
-	virtual void ExitState() { };
+	virtual void ExitState();
 	virtual void SetUpDelegate() { };
 	virtual void CleanUpDelegate() { };
 

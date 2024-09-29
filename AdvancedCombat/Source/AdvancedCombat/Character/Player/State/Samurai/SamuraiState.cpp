@@ -33,13 +33,11 @@ USamuraiState::~USamuraiState()
 void USamuraiState::EnterState(ACombatPlayerCharacter* InCombatCharacter)
 {
 	Super::EnterState(InCombatCharacter);
-	SetUpDelegate();
 }
 
 void USamuraiState::ExitState()
 {
 	Super::ExitState();
-	CleanUpDelegate();
 }
 
 void USamuraiState::SetUpDelegate()

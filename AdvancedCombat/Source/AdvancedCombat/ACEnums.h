@@ -16,6 +16,22 @@ enum class ETaskResult : uint8
 };
 
 UENUM(BlueprintType)
+enum class EACAbilityInputID : uint8
+{
+	None			UMETA(DisplayName = "None"),
+	Confirm			UMETA(DisplayName = "Confirm"),
+	Cancel			UMETA(DisplayName = "Cancel"),
+	Jump			UMETA(DisplayName = "Jump"),
+	Attack			UMETA(DisplayName = "Attack"),
+	Aiming			UMETA(DisplayName = "Aiming"),
+	Tab				UMETA(DisplayName = "Tab"),
+	Ability01		UMETA(DisplayName = "Ability01"),
+	Ability02		UMETA(DisplayName = "Ability02"),
+	Ability03		UMETA(DisplayName = "Ability03"),
+	Ability04		UMETA(DisplayName = "Ability04"),
+};
+
+UENUM(BlueprintType)
 enum class EACHitReactDirection : uint8
 {
 	// 0

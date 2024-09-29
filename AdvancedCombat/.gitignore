@@ -74,6 +74,7 @@ Plugins/**/Intermediate/*
 DerivedDataCache/*
 
 # Additional
+Content/AdvancedLocomotionV4/*
 Content/AdvancedCombat/Assets/*
 Content/AdvancedCombat/CombatAnimations/*
 Content/StarterContent/*

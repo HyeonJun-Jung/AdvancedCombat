@@ -17,6 +17,8 @@ public class AdvancedCombat : ModuleRules
             "GameplayTags"
         });
 
+        PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
+
         PrivateIncludePaths.Add("AdvancedCombat");
     }
 }

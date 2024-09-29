@@ -18,4 +18,10 @@ void UCombatState::EnterState(ACombatPlayerCharacter* InCombatCharacter)
 	CombatCharacter = InCombatCharacter;
 	AnimInst = InCombatCharacter->GetCombatAnimInst();
 	PlayerController = Cast<APlayerController>(InCombatCharacter->GetController());
+	SetUpDelegate();
+}
+
+void UCombatState::ExitState()
+{
+	CleanUpDelegate();
 }

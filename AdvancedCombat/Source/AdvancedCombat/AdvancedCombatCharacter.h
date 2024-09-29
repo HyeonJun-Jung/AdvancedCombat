@@ -20,6 +20,7 @@ class AAdvancedCombatCharacter : public ACharacter_Base
 {
 	GENERATED_BODY()
 
+protected:
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;

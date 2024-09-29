@@ -7,6 +7,10 @@
 #include "Tag/ACGameplayTag.h"
 #include "Engine/DamageEvents.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Ability/ACAbilitySystemComponent.h"
+#include "Ability/ACGameplayAbility_Base.h"
+#include "Ability/ACGameplayEffect_Base.h"
+#include "Ability/AttributeSets/ACAttributeSet_Base.h"
 
 // Sets default values
 ACharacter_Base::ACharacter_Base()
@@ -38,6 +42,23 @@ void ACharacter_Base::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 }
 
+void ACharacter_Base::ShowDamage(float DamageAmount)
+{
+	//if (DamageNumberClass)
+	//{
+	//	UDamageWidgetComponent* DamageText = NewObject<UDamageWidgetComponent>(this, DamageNumberClass);
+	//	DamageText->RegisterComponent();
+	//	DamageText->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+
+	//	//// Set Damage Text Color
+	//	UWidget_DamageNumber* DamageWidget = Cast<UWidget_DamageNumber>(DamageText->GetWidget());
+	//	if (IsValid(DamageWidget))
+	//	{
+	//		DamageWidget->SetDamage(DamageAmount);
+	//	}
+	//}
+}
+
 float ACharacter_Base::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
@@ -45,6 +66,11 @@ float ACharacter_Base::TakeDamage(float Damage, FDamageEvent const& DamageEvent,
 	Delegate_TakeDamage.Broadcast();
 
 	return Damage;
+}
+
+void ACharacter_Base::Died()
+{
+	bIsAlive = false;
 }
 
 EACHitReactDirection ACharacter_Base::GetHitReactDirection(const FVector& ImpactPoint, AActor* DamageCauser)
@@ -189,4 +215,183 @@ void ACharacter_Base::ShowParriedReaction(EACHitReactDirection hitDirection)
 		break;
 	}
 }
+
+UAbilitySystemComponent* ACharacter_Base::GetAbilitySystemComponent() const
+{
+	return ASC;
+}
+
+void ACharacter_Base::SetHealth(float Health)
+{
+	if (IsValid(AttributeSetBase))
+	{
+		AttributeSetBase->SetHealth(Health);
+	}
+}
+
+void ACharacter_Base::SetMana(float Mana)
+{
+	if (IsValid(AttributeSetBase))
+	{
+		AttributeSetBase->SetMana(Mana);
+	}
+}
+
+void ACharacter_Base::SetStamina(float Stamina)
+{
+	if (IsValid(AttributeSetBase))
+	{
+		AttributeSetBase->SetStamina(Stamina);
+	}
+}
+
+int32 ACharacter_Base::GetCharacterLevel() const
+{
+	if (IsValid(AttributeSetBase))
+	{
+		AttributeSetBase->GetCharacterLevel();
+	}
+	return 0;
+}
+
+float ACharacter_Base::GetHealth() const
+{
+	if (IsValid(AttributeSetBase))
+	{
+		return AttributeSetBase->GetHealth();
+	}
+	return 0.0f;
+}
+
+float ACharacter_Base::GetMaxHealth() const
+{
+	if (IsValid(AttributeSetBase))
+	{
+		return AttributeSetBase->GetMaxHealth();
+	}
+	return 0.0f;
+}
+
+float ACharacter_Base::GetMana() const
+{
+	if (IsValid(AttributeSetBase))
+	{
+		return AttributeSetBase->GetMana();
+	}
+	return 0.0f;
+}
+
+float ACharacter_Base::GetMaxMana() const
+{
+	if (IsValid(AttributeSetBase))
+	{
+		return AttributeSetBase->GetMaxMana();
+	}
+	return 0.0f;
+}
+
+float ACharacter_Base::GetStamina() const
+{
+	if (IsValid(AttributeSetBase))
+	{
+		return AttributeSetBase->GetStamina();
+	}
+	return 0.0f;
+}
+
+float ACharacter_Base::GetMaxStamina() const
+{
+	if (IsValid(AttributeSetBase))
+	{
+		return AttributeSetBase->GetMaxStamina();
+	}
+	return 0.0f;
+}
+
+float ACharacter_Base::GetMoveSpeed() const
+{
+	if (IsValid(AttributeSetBase))
+	{
+		return AttributeSetBase->GetMoveSpeed();
+	}
+	return 0.0f;
+}
+
+float ACharacter_Base::GetMoveSpeedBaseValue() const
+{
+	if (IsValid(AttributeSetBase))
+	{
+		return AttributeSetBase->GetMoveSpeedAttribute().GetGameplayAttributeData(AttributeSetBase.Get())->GetBaseValue();
+	}
+	return 0.0f;
+}
+
+void ACharacter_Base::AddCharacterAbilities()
+{
+	if (GetLocalRole() != ROLE_Authority || !IsValid(ASC) || ASC->bStartupEffectsApplied)
+	{
+		return;
+	}
+
+	FGameplayEffectContextHandle EffectContext = ASC->MakeEffectContext();
+	EffectContext.AddSourceObject(this);
+
+	for (TSubclassOf<UGameplayEffect> GameplayEffect : StartupEffects)
+	{
+		FGameplayEffectSpecHandle NewHandle = ASC->MakeOutgoingSpec(GameplayEffect, GetCharacterLevel(), EffectContext);
+		if (NewHandle.IsValid())
+		{
+			FActiveGameplayEffectHandle ActiveGEHandle = ASC->ApplyGameplayEffectSpecToTarget(*NewHandle.Data.Get(), ASC.Get());
+		}
+	}
+
+	ASC->bStartupEffectsApplied = true;
+}
+
+void ACharacter_Base::InitializeAttributes()
+{
+	if (!IsValid(ASC))
+	{
+		return;
+	}
+
+	if (!DefaultAttributes)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s() Missing DefaultAttributes for %s. Please fill in the character's Blueprint."), *FString(__FUNCTION__), *GetName());
+		return;
+	}
+
+	// Can run on Server and Client
+	FGameplayEffectContextHandle EffectContext = ASC->MakeEffectContext();
+	EffectContext.AddSourceObject(this);
+
+	FGameplayEffectSpecHandle NewHandle = ASC->MakeOutgoingSpec(DefaultAttributes, GetCharacterLevel(), EffectContext);
+	if (NewHandle.IsValid())
+	{
+		FActiveGameplayEffectHandle ActiveGEHandle = ASC->ApplyGameplayEffectSpecToTarget(*NewHandle.Data.Get(), ASC.Get());
+	}
+}
+
+void ACharacter_Base::AddStartupEffects()
+{
+	if (GetLocalRole() != ROLE_Authority || !IsValid(ASC) || ASC->bStartupEffectsApplied)
+	{
+		return;
+	}
+
+	FGameplayEffectContextHandle EffectContext = ASC->MakeEffectContext();
+	EffectContext.AddSourceObject(this);
+
+	for (TSubclassOf<UGameplayEffect> GameplayEffect : StartupEffects)
+	{
+		FGameplayEffectSpecHandle NewHandle = ASC->MakeOutgoingSpec(GameplayEffect, GetCharacterLevel(), EffectContext);
+		if (NewHandle.IsValid())
+		{
+			FActiveGameplayEffectHandle ActiveGEHandle = ASC->ApplyGameplayEffectSpecToTarget(*NewHandle.Data.Get(), ASC.Get());
+		}
+	}
+
+	ASC->bStartupEffectsApplied = true;
+}
+
 
