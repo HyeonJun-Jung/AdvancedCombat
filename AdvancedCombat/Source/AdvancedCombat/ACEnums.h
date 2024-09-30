@@ -24,6 +24,7 @@ enum class EACAbilityInputID : uint8
 	Jump			UMETA(DisplayName = "Jump"),
 	Attack			UMETA(DisplayName = "Attack"),
 	Aiming			UMETA(DisplayName = "Aiming"),
+	Interact		UMETA(DisplayName = "Interact"),
 	Tab				UMETA(DisplayName = "Tab"),
 	Ability01		UMETA(DisplayName = "Ability01"),
 	Ability02		UMETA(DisplayName = "Ability02"),

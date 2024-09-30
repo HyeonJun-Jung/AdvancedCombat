@@ -7,6 +7,7 @@
 #include <Kismet/KismetMathLibrary.h>
 #include <Kismet/KismetTextLibrary.h>
 #include "Interface/Interact_Interface.h"
+#include "Actor/Item_Base.h"
 
 // Sets default values for this component's properties
 UInventoryComponent::UInventoryComponent()
@@ -24,7 +25,7 @@ void UInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UDataTable* BP_ItemDB = LoadObject<UDataTable>(this, TEXT("/Game/AdvancedCombat/Player/Inventory/Data/DB_Item.DB_Item"));
+	UDataTable* BP_ItemDB = LoadObject<UDataTable>(this, TEXT("/Game/AdvancedCombat/Inventory/Data/DB_Item.DB_Item"));
 	if (IsValid(BP_ItemDB))
 	{
 		ItemDB = BP_ItemDB;
@@ -56,11 +57,11 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
 void UInventoryComponent::Interact()
 {
-	AController* controller = Cast<AController>(GetOwner());
-	if (!controller) return;
-
-	APawn* pawn = controller->GetPawn();
+	APawn* pawn = Cast<APawn>(GetOwner());
 	if (!pawn) return;
+
+	AController* controller = pawn->GetController();
+	if (!controller) return;
 
 	TArray<AActor*> IgnoreActors;	FHitResult hitResult;
 	IgnoreActors.Add(pawn);
@@ -78,10 +79,10 @@ void UInventoryComponent::Interact()
 		EDrawDebugTrace::ForOneFrame, hitResult, true);
 
 	IInteract_Interface* hitActor = Cast<IInteract_Interface>(hitResult.GetActor());
-
+	AItem_Base* hitItem = Cast<AItem_Base>(hitActor);
 	if (hitActor)
 	{
-		hitActor->Interact_With(this);
+		hitActor->Execute_Interact_With(hitItem, this);
 		/*AInteractable_Actor* interactable_Actor = Cast<AInteractable_Actor>(Interacting_Actor);
 		if (IsValid(interactable_Actor))
 		{

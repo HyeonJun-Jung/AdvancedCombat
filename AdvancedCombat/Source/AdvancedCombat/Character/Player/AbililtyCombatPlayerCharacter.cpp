@@ -22,6 +22,7 @@
 #include "GameplayEffectTypes.h"
 #include "Character/Ability/ACGameplayEffect_Base.h"
 #include "Character/Ability/ACGameplayAbility_Base.h"
+#include "Component/InventoryComponent.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AAbililtyCombatPlayerCharacter
@@ -60,6 +61,8 @@ AAbililtyCombatPlayerCharacter::AAbililtyCombatPlayerCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
+	// Create a Inventory
+	InventoryComp = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
@@ -133,18 +136,17 @@ void AAbililtyCombatPlayerCharacter::SetupPlayerInputComponent(UInputComponent* 
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
 
 		// Jumping
-		// EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		// EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
-
-		// Attacking
-		// EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &AAbililtyCombatPlayerCharacter::Attack);
-		// EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &AAbililtyCombatPlayerCharacter::StopAttack);
 
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AAbililtyCombatPlayerCharacter::Move);
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AAbililtyCombatPlayerCharacter::Look);
+
+		// Interact
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AAbililtyCombatPlayerCharacter::Interact);
 	}
 	else
 	{
@@ -164,9 +166,8 @@ void AAbililtyCombatPlayerCharacter::SetupGASInputComponent()
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &AAbililtyCombatPlayerCharacter::GASInputPressed, EACAbilityInputID::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &AAbililtyCombatPlayerCharacter::GASInputReleased, EACAbilityInputID::Jump);
 
-		// EnhancedInputComponent->BindAction(FireBallAction, ETriggerEvent::Triggered, this, &AAbililtyCombatPlayerCharacter::GASInputPressed, EGPAbilityInputID::FireBall);
-		// EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AAbililtyCombatPlayerCharacter::GASInputPressed, 1);
-		// EnhancedInputComponent->BindAction(SkillAction, ETriggerEvent::Triggered, this, &AAbililtyCombatPlayerCharacter::GASInputPressed, 2);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AAbililtyCombatPlayerCharacter::GASInputPressed, EACAbilityInputID::Attack);
+		EnhancedInputComponent->BindAction(WeaponAbilityAction, ETriggerEvent::Triggered, this, &AAbililtyCombatPlayerCharacter::GASInputPressed, EACAbilityInputID::Ability01);
 	}
 }
 
@@ -393,5 +394,13 @@ void AAbililtyCombatPlayerCharacter::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+void AAbililtyCombatPlayerCharacter::Interact()
+{
+	if (InventoryComp)
+	{
+		InventoryComp->Interact();
 	}
 }
