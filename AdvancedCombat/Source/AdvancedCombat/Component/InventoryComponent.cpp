@@ -57,11 +57,11 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
 void UInventoryComponent::Interact()
 {
-	APawn* pawn = Cast<APawn>(GetOwner());
-	if (!pawn) return;
-
-	AController* controller = pawn->GetController();
+	AController* controller = Cast<AController>(GetOwner());
 	if (!controller) return;
+
+	APawn* pawn = controller->GetPawn();
+	if (!pawn) return;
 
 	TArray<AActor*> IgnoreActors;	FHitResult hitResult;
 	IgnoreActors.Add(pawn);
@@ -98,6 +98,24 @@ FName UInventoryComponent::GetFNameOfItemID(int ItemID)
 	return  FName(*FString::FromInt(ItemID));
 }
 
+void UInventoryComponent::GetAllSlotsOfCategory(TArray<FSlotStruct>& InSlotArray, EItemCategory InItemCategory, EEquipCategory InEquipCategory)
+{
+	for (FSlotStruct& slot : Contents)
+	{
+		if (slot.Category == InItemCategory)
+		{
+			if (slot.Category == EItemCategory::EIC_Equipment && InEquipCategory == slot.EquipCategory)
+			{
+				InSlotArray.Add(slot);
+			}
+			else
+			{
+				InSlotArray.Add(slot);
+			}
+		}
+	}
+}
+
 void UInventoryComponent::LogInventoryContents()
 {
 	for (FSlotStruct slot : Contents)
@@ -130,6 +148,8 @@ void UInventoryComponent::AddToInventory(FSlotStruct ItemSlot)
 		{
 			slot.Quantity += ItemSlot.Quantity;
 
+			Delegate_InventoryUpdated.Broadcast();
+
 			//auto controller = Cast<ADPPlayerController>(GetOwner());
 			//if (IsValid(controller))
 			//{
@@ -148,6 +168,8 @@ void UInventoryComponent::AddToInventory(FSlotStruct ItemSlot)
 		if (slot.Quantity == 0 || slot.ID == -1)
 		{
 			slot = ItemSlot;
+
+			Delegate_InventoryUpdated.Broadcast();
 
 			//auto controller = Cast<ADPPlayerController>(GetOwner());
 			//if (IsValid(controller))

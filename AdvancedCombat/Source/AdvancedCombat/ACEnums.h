@@ -26,6 +26,7 @@ enum class EACAbilityInputID : uint8
 	Aiming			UMETA(DisplayName = "Aiming"),
 	Interact		UMETA(DisplayName = "Interact"),
 	Tab				UMETA(DisplayName = "Tab"),
+	Signature		UMETA(DisplayName = "Signature"),
 	Ability01		UMETA(DisplayName = "Ability01"),
 	Ability02		UMETA(DisplayName = "Ability02"),
 	Ability03		UMETA(DisplayName = "Ability03"),
@@ -77,11 +78,13 @@ enum class EEquipCategory : uint8
 {
 	EEC_None,
 	EEC_Weapon,
-	EEC_Hat,
+	EEC_Helmet,
 	EEC_Chest,
 	EEC_Pants,
-	EEC_Shoes,
+	EEC_Glove,
+	EEC_Ring,
 	EEC_Cave,
+	EEC_Usable,
 };
 
 UENUM(BlueprintType)

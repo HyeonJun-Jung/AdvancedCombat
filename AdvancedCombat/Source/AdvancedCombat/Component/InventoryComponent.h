@@ -67,6 +67,7 @@ public:
 	UDataTable* GetItemDB() { return ItemDB; };
 	TArray<FSlotStruct>& GetContents() { return Contents; }
 	TArray<FSlotStruct>& GetQuickSlots() { return QuickSlots; }
+	void GetAllSlotsOfCategory(TArray<FSlotStruct>& InSlotArray, EItemCategory InItemCategory, EEquipCategory InEquipCategory);
 	void LogInventoryContents();
 
 	UFUNCTION(BlueprintCallable)

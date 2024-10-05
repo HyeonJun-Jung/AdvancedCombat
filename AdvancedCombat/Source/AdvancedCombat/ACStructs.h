@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
 #include "ACEnums.h"
+#include "AbilitySystemComponent.h"
 #include "ACStructs.generated.h"
 
 
@@ -27,7 +28,7 @@ struct ADVANCEDCOMBAT_API FItemStruct : public FTableRowBase
 
 	// Item Base
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data")
-	int ID;
+	int ID = -1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data")
 	EItemCategory Category;
@@ -70,6 +71,12 @@ struct ADVANCEDCOMBAT_API FItemStruct : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Equip Data")
 	FTransform RelativeTransform;
+
+	UPROPERTY(EditAnywhere, Category = "Equip Data")
+	TSubclassOf<UGameplayAbility> AttackAbilityClass;
+
+	UPROPERTY(EditAnywhere, Category = "Equip Data")
+	TSubclassOf<UGameplayAbility> SignatureAbilityClass;
 };
 
 USTRUCT(BlueprintType)
@@ -121,6 +128,9 @@ struct ADVANCEDCOMBAT_API FSlotStruct
 	uint8 Quantity;
 
 	// For Equipment 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EEquipCategory EquipCategory;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FEquipmentStatStruct EquipStatus;
 };

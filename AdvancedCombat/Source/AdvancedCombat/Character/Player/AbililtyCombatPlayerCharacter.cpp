@@ -23,6 +23,7 @@
 #include "Character/Ability/ACGameplayEffect_Base.h"
 #include "Character/Ability/ACGameplayAbility_Base.h"
 #include "Component/InventoryComponent.h"
+#include "Component/EquipComponent.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AAbililtyCombatPlayerCharacter
@@ -61,13 +62,23 @@ AAbililtyCombatPlayerCharacter::AAbililtyCombatPlayerCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
-	// Create a Inventory
-	InventoryComp = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
+	// Create a Equip Component
+	EquipComponent = CreateDefaultSubobject<UEquipComponent>(TEXT("Equip Component"));
+
+	LeftWeapon_Static = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LeftWeapon Static"));
+	LeftWeapon_Static->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
+
+	RightWeapon_Static = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RightWeapon Static"));
+	RightWeapon_Static->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
+
+	LeftWeapon_Skeletal = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("LeftWeapon Skeletal"));
+	LeftWeapon_Skeletal->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
+
+	RightWeapon_Skeletal = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("RightWeapon Skeletal"));
+	RightWeapon_Skeletal->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
-
-
 }
 
 void AAbililtyCombatPlayerCharacter::PossessedBy(AController* NewController)
@@ -144,9 +155,6 @@ void AAbililtyCombatPlayerCharacter::SetupPlayerInputComponent(UInputComponent* 
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AAbililtyCombatPlayerCharacter::Look);
-
-		// Interact
-		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AAbililtyCombatPlayerCharacter::Interact);
 	}
 	else
 	{
@@ -166,8 +174,8 @@ void AAbililtyCombatPlayerCharacter::SetupGASInputComponent()
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &AAbililtyCombatPlayerCharacter::GASInputPressed, EACAbilityInputID::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &AAbililtyCombatPlayerCharacter::GASInputReleased, EACAbilityInputID::Jump);
 
-		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AAbililtyCombatPlayerCharacter::GASInputPressed, EACAbilityInputID::Attack);
-		EnhancedInputComponent->BindAction(WeaponAbilityAction, ETriggerEvent::Triggered, this, &AAbililtyCombatPlayerCharacter::GASInputPressed, EACAbilityInputID::Ability01);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &AAbililtyCombatPlayerCharacter::GASInputPressed, EACAbilityInputID::Attack);
+		EnhancedInputComponent->BindAction(WeaponAbilityAction, ETriggerEvent::Started, this, &AAbililtyCombatPlayerCharacter::GASInputPressed, EACAbilityInputID::Signature);
 	}
 }
 
@@ -180,7 +188,108 @@ void AAbililtyCombatPlayerCharacter::SetDefaultInputAbilities()
 		ASC->GiveAbility(StartSpec);
 	}
 }
-//
+
+void AAbililtyCombatPlayerCharacter::BindASCInput()
+{
+	if (!ASCInputBound && IsValid(ASC) && IsValid(InputComponent))
+	{
+		FTopLevelAssetPath AbilityEnumAssetPath = FTopLevelAssetPath(FName("/Script/AdvancedCombat"), FName("EACAbilityInputID"));
+		ASC->BindAbilityActivationToInputComponent(InputComponent, FGameplayAbilityInputBinds(FString("ConfirmTarget"),
+			FString("CancelTarget"), AbilityEnumAssetPath, static_cast<int32>(EACAbilityInputID::Confirm), static_cast<int32>(EACAbilityInputID::Cancel)));
+
+		ASCInputBound = true;
+	}
+}
+
+void AAbililtyCombatPlayerCharacter::LevelUp_Callback(const FOnAttributeChangeData& AttributeChangeData)
+{
+	if (GetLocalRole() != ROLE_Authority || !IsValid(ASC) || !LevelUpEffect)
+	{
+		return;
+	}
+}
+
+void AAbililtyCombatPlayerCharacter::GASInputPressed(EACAbilityInputID InputId)
+{
+	UE_LOG(LogTemp, Display, TEXT("GASInputPressed"));
+
+	FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromInputID(static_cast<int32>(InputId));
+	if (Spec)
+	{
+		Spec->InputPressed = true;
+		if (Spec->IsActive())
+		{
+			ASC->AbilitySpecInputPressed(*Spec);
+		}
+		else
+		{
+			ASC->TryActivateAbility(Spec->Handle);
+		}
+	}
+}
+
+void AAbililtyCombatPlayerCharacter::GASInputReleased(EACAbilityInputID InputId)
+{
+	UE_LOG(LogTemp, Display, TEXT("GASInputReleased"));
+
+	FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromInputID(static_cast<int32>(InputId));
+	if (Spec)
+	{
+		Spec->InputPressed = false;
+		if (Spec->IsActive())
+		{
+			ASC->AbilitySpecInputReleased(*Spec);
+		}
+	}
+}
+
+void AAbililtyCombatPlayerCharacter::Move(const FInputActionValue& Value)
+{
+	// input is a Vector2D
+	FVector2D MovementVector = Value.Get<FVector2D>();
+
+	if (Controller != nullptr)
+	{
+		// find out which way is forward
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+		// get forward vector
+		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+
+		// get right vector 
+		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+		// add movement 
+		AddMovementInput(ForwardDirection, MovementVector.Y);
+		AddMovementInput(RightDirection, MovementVector.X);
+
+		if (GetMovementComponent()->IsFlying())
+		{
+			const FVector UpDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Z);
+
+			if (Rotation.Pitch < 90)
+				AddMovementInput(FVector(0, 0, 1), 1);
+			else if (Rotation.Pitch > 270)
+				AddMovementInput(FVector(0, 0, 1), -1);
+		}
+	}
+}
+
+void AAbililtyCombatPlayerCharacter::Look(const FInputActionValue& Value)
+{
+	// input is a Vector2D
+	FVector2D LookAxisVector = Value.Get<FVector2D>();
+
+	if (Controller != nullptr)
+	{
+		// add yaw and pitch input to controller
+		AddControllerYawInput(LookAxisVector.X);
+		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+
 //void AAbililtyCombatPlayerCharacter::GiveGASAbilities(UGASInputDataAsset* InAbilityAsset)
 //{
 //	if (IsValid(ASC) && IsValid(InputComponent))
@@ -296,111 +405,3 @@ void AAbililtyCombatPlayerCharacter::SetDefaultInputAbilities()
 //		}
 //	}
 //}
-
-void AAbililtyCombatPlayerCharacter::BindASCInput()
-{
-	if (!ASCInputBound && IsValid(ASC) && IsValid(InputComponent))
-	{
-		FTopLevelAssetPath AbilityEnumAssetPath = FTopLevelAssetPath(FName("/Script/AdvancedCombat"), FName("EACAbilityInputID"));
-		ASC->BindAbilityActivationToInputComponent(InputComponent, FGameplayAbilityInputBinds(FString("ConfirmTarget"),
-			FString("CancelTarget"), AbilityEnumAssetPath, static_cast<int32>(EACAbilityInputID::Confirm), static_cast<int32>(EACAbilityInputID::Cancel)));
-
-		ASCInputBound = true;
-	}
-}
-
-void AAbililtyCombatPlayerCharacter::LevelUp_Callback(const FOnAttributeChangeData& AttributeChangeData)
-{
-	if (GetLocalRole() != ROLE_Authority || !IsValid(ASC) || !LevelUpEffect)
-	{
-		return;
-	}
-}
-
-void AAbililtyCombatPlayerCharacter::GASInputPressed(EACAbilityInputID InputId)
-{
-	UE_LOG(LogTemp, Display, TEXT("GASInputPressed"));
-
-	FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromInputID(static_cast<int32>(InputId));
-	if (Spec)
-	{
-		Spec->InputPressed = true;
-		if (Spec->IsActive())
-		{
-			ASC->AbilitySpecInputPressed(*Spec);
-		}
-		else
-		{
-			ASC->TryActivateAbility(Spec->Handle);
-		}
-	}
-}
-
-void AAbililtyCombatPlayerCharacter::GASInputReleased(EACAbilityInputID InputId)
-{
-	UE_LOG(LogTemp, Display, TEXT("GASInputReleased"));
-
-	FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromInputID(static_cast<int32>(InputId));
-	if (Spec)
-	{
-		Spec->InputPressed = false;
-		if (Spec->IsActive())
-		{
-			ASC->AbilitySpecInputReleased(*Spec);
-		}
-	}
-}
-
-void AAbililtyCombatPlayerCharacter::Move(const FInputActionValue& Value)
-{
-	// input is a Vector2D
-	FVector2D MovementVector = Value.Get<FVector2D>();
-
-	if (Controller != nullptr)
-	{
-		// find out which way is forward
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		// get forward vector
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-
-		// get right vector 
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-		// add movement 
-		AddMovementInput(ForwardDirection, MovementVector.Y);
-		AddMovementInput(RightDirection, MovementVector.X);
-
-		if (GetMovementComponent()->IsFlying())
-		{
-			const FVector UpDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Z);
-
-			if (Rotation.Pitch < 90)
-				AddMovementInput(FVector(0, 0, 1), 1);
-			else if (Rotation.Pitch > 270)
-				AddMovementInput(FVector(0, 0, 1), -1);
-		}
-	}
-}
-
-void AAbililtyCombatPlayerCharacter::Look(const FInputActionValue& Value)
-{
-	// input is a Vector2D
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
-
-	if (Controller != nullptr)
-	{
-		// add yaw and pitch input to controller
-		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(LookAxisVector.Y);
-	}
-}
-
-void AAbililtyCombatPlayerCharacter::Interact()
-{
-	if (InventoryComp)
-	{
-		InventoryComp->Interact();
-	}
-}
