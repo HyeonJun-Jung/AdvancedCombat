@@ -2,6 +2,19 @@
 
 
 #include "Character/Player/CombatPlayer_AnimInstance.h"
+#include "Component/EquipComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "GameFramework/Character.h"
+
+void UCombatPlayer_AnimInstance::NativeInitializeAnimation()
+{
+	Super::NativeInitializeAnimation();
+
+	if (Character)
+	{
+		EquipComponent = Character->GetComponentByClass<UEquipComponent>();
+	}
+}
 
 void UCombatPlayer_AnimInstance::AnimNotify_AttackInputStart()
 {
@@ -16,4 +29,14 @@ void UCombatPlayer_AnimInstance::AnimNotify_CheckDoNextAttack()
 void UCombatPlayer_AnimInstance::AnimNotify_DashAttack()
 {
 	Delegate_DashAttack.Broadcast();
+}
+
+void UCombatPlayer_AnimInstance::AnimNotify_ShootMagic_Staff()
+{
+	Delegate_ShootMagic_Staff.Broadcast();
+}
+
+void UCombatPlayer_AnimInstance::AnimNotify_ShootMagic_Hand()
+{
+	Delegate_ShootMagic_Hand.Broadcast();
 }

@@ -75,6 +75,14 @@ TSubclassOf<UDamageType> UANS_CheckAttackHit_Samurai::GetDamageClass()
     case EDamageType::StingDamage:
         return UStingDamage::StaticClass();
         break;
+    case EDamageType::AirborneDamage:
+        return UAirborneDamage::StaticClass();
+        break;
+    case EDamageType::InAirDamage:
+        return UInAirDamage::StaticClass();
+        break;
+    case EDamageType::HitDownDamage:
+        return UHitDownDamage::StaticClass();
     default:
         break;
     }

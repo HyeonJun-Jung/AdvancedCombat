@@ -20,6 +20,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* InteractAction;
 
+	/** GameMenu Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* GameMenuAction;
+
 	/** Inventory Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* InventoryAction;
@@ -32,6 +36,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class UInventoryComponent* InventoryComp;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	class USlotComponent* slotComp;
+
 public:
 	AACPlayerController();
 
@@ -42,8 +49,19 @@ protected:
 	virtual void SetupInputComponent() override;
 
 public:
+	class USlotComponent* GetSlotComponent() { return slotComp; }
+
+public:
 	void Interact();
 	void ShowInventory();
+	void ShowGameMenu();
+
+public:
+	UFUNCTION(BlueprintCallable)
+	void EnableUIInteract();
+
+	UFUNCTION(BlueprintCallable)
+	void DisableUIInteract();
 
 public:
 	UPROPERTY(BlueprintAssignable)

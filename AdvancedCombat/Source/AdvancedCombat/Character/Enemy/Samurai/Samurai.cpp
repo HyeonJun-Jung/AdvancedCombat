@@ -194,17 +194,10 @@ float ASamurai::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AContr
 {
 	Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 
-	ACombatPlayerCharacter* combatCharacter = Cast<ACombatPlayerCharacter>(DamageCauser);
-	if (combatCharacter)
-	{
-		DealWithCombatCharacter(Damage, DamageEvent, EventInstigator, combatCharacter);
-		return Damage;
-	}
-
 	return Damage;
 }
 
-void ASamurai::DealWithCombatCharacter(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, ACombatPlayerCharacter* CombatCharacter)
+void ASamurai::DealWithDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	FHitResult hitResult;
 	FVector ImpulseDir;
@@ -224,8 +217,8 @@ void ASamurai::DealWithCombatCharacter(float Damage, FDamageEvent const& DamageE
 		DamageEvent.GetBestHitInfo(this, EventInstigator, hitResult, ImpulseDir);
 	}
 
-	EACHitReactDirection hitDirection = GetHitReactDirection(hitResult.ImpactPoint, CombatCharacter);
-	EACHitReactDirection hitDir_RightLeft = GetRightOrLeft(hitResult.ImpactPoint, CombatCharacter);
+	EACHitReactDirection hitDirection = GetHitReactDirection(hitResult.ImpactPoint, DamageCauser);
+	EACHitReactDirection hitDir_RightLeft = GetRightOrLeft(hitResult.ImpactPoint, DamageCauser);
 
 	if (IsParryable())
 	{
@@ -243,6 +236,9 @@ void ASamurai::DealWithCombatCharacter(float Damage, FDamageEvent const& DamageE
 		}
 		else if (DamageEvent.DamageTypeClass == UParryableDamage::StaticClass())
 		{
+			ACombatPlayerCharacter* CombatCharacter = Cast<ACombatPlayerCharacter>(DamageCauser);
+			if (!CombatCharacter) return;
+
 			CombatCharacter->Delegate_Parried.Broadcast();
 			CombatCharacter->ShowParriedReaction(hitDirection);
 

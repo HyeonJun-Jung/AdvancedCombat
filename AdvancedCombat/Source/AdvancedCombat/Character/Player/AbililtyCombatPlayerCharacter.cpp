@@ -24,6 +24,9 @@
 #include "Character/Ability/ACGameplayAbility_Base.h"
 #include "Component/InventoryComponent.h"
 #include "Component/EquipComponent.h"
+#include "Component/SlotComponent.h"
+#include "ACGameplayTags.h"
+#include "Character/Player/ACPlayerController.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AAbililtyCombatPlayerCharacter
@@ -105,6 +108,8 @@ void AAbililtyCombatPlayerCharacter::PossessedBy(AController* NewController)
 
 		SetDefaultInputAbilities();
 
+		SetDefaultAbilities();
+
 		APlayerController* playerController = CastChecked<APlayerController>(NewController);
 		playerController->ConsoleCommand(TEXT("showdebug abilitysystem"));
 	}
@@ -117,6 +122,11 @@ void AAbililtyCombatPlayerCharacter::BeginPlay()
 
 	// Get AnimInstance
 	CombatAnimInst = Cast<UCombatPlayer_AnimInstance>(GetMesh()->GetAnimInstance());
+	if (CombatAnimInst && EquipComponent)
+	{
+		CombatAnimInst->Delegate_AttackInputStart.AddUObject(EquipComponent, &UEquipComponent::AttackInputStart);
+		CombatAnimInst->Delegate_CheckDoNextAttack.AddUObject(EquipComponent, &UEquipComponent::CheckShouldAttack);
+	}
 
 	//Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
@@ -129,6 +139,26 @@ void AAbililtyCombatPlayerCharacter::BeginPlay()
 
 	// Bind Attribute Delegate
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetCharacterLevelAttribute()).AddUObject(this, &AAbililtyCombatPlayerCharacter::LevelUp_Callback);
+}
+
+void AAbililtyCombatPlayerCharacter::BindDelegateFunctions()
+{
+	AnimInst = GetMesh()->GetAnimInstance();
+	CombatAnimInst = Cast<UCombatPlayer_AnimInstance>(GetMesh()->GetAnimInstance());
+	if (CombatAnimInst && EquipComponent)
+	{
+		CombatAnimInst->OnMontageEnded.Clear();
+		CombatAnimInst->Delegate_AttackInputStart.Clear();
+		CombatAnimInst->Delegate_CheckDoNextAttack.Clear();
+		CombatAnimInst->Delegate_ShootMagic_Staff.Clear();
+		CombatAnimInst->Delegate_ShootMagic_Hand.Clear();
+
+		CombatAnimInst->OnMontageEnded.AddUniqueDynamic(EquipComponent, &UEquipComponent::MontageEnded);
+		CombatAnimInst->Delegate_AttackInputStart.AddUObject(EquipComponent, &UEquipComponent::AttackInputStart);
+		CombatAnimInst->Delegate_CheckDoNextAttack.AddUObject(EquipComponent, &UEquipComponent::CheckShouldAttack);
+		CombatAnimInst->Delegate_ShootMagic_Staff.AddUObject(this, &AAbililtyCombatPlayerCharacter::MagicStaff_Callback);
+		CombatAnimInst->Delegate_ShootMagic_Hand.AddUObject(this, &AAbililtyCombatPlayerCharacter::MagicHand_Callback);
+	}
 }
 
 UAbilitySystemComponent* AAbililtyCombatPlayerCharacter::GetAbilitySystemComponent() const
@@ -147,7 +177,7 @@ void AAbililtyCombatPlayerCharacter::SetupPlayerInputComponent(UInputComponent* 
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
 
 		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+		// EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		// EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		// Moving
@@ -189,6 +219,15 @@ void AAbililtyCombatPlayerCharacter::SetDefaultInputAbilities()
 	}
 }
 
+void AAbililtyCombatPlayerCharacter::SetDefaultAbilities()
+{
+	for (auto& ability : DefaultAbilities)
+	{
+		FGameplayAbilitySpec StartSpec(ability);
+		ASC->GiveAbility(StartSpec);
+	}
+}
+
 void AAbililtyCombatPlayerCharacter::BindASCInput()
 {
 	if (!ASCInputBound && IsValid(ASC) && IsValid(InputComponent))
@@ -199,6 +238,21 @@ void AAbililtyCombatPlayerCharacter::BindASCInput()
 
 		ASCInputBound = true;
 	}
+}
+
+void AAbililtyCombatPlayerCharacter::MagicStaff_Callback()
+{
+	AACPlayerController* pc = Cast<AACPlayerController>(GetController());
+	if (pc->GetSlotComponent())
+	{
+		ASC->TryActivateAbilitiesByTag(pc->GetSlotComponent()->GetCurrnetMagicTag().GetSingleTagContainer());
+		// ASC->TryActivateAbilitiesByTag(FACGameplayTags::Get().Magic_Ice_IceBlast.GetSingleTagContainer());
+	}
+}
+
+void AAbililtyCombatPlayerCharacter::MagicHand_Callback()
+{
+	ASC->TryActivateAbilitiesByTag(FACGameplayTags::Get().Magic_Ice_IceBlast.GetSingleTagContainer());
 }
 
 void AAbililtyCombatPlayerCharacter::LevelUp_Callback(const FOnAttributeChangeData& AttributeChangeData)

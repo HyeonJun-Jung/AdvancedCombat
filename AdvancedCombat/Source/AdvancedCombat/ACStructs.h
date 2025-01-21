@@ -6,6 +6,7 @@
 #include "Engine/DataTable.h"
 #include "ACEnums.h"
 #include "AbilitySystemComponent.h"
+#include "GameplayTagContainer.h"
 #include "ACStructs.generated.h"
 
 
@@ -111,7 +112,7 @@ struct ADVANCEDCOMBAT_API FSlotStruct
 	FSlotStruct& operator=(const FSlotStruct& InSlot)
 	{
 		ID = InSlot.ID; Category = InSlot.Category; ItemName = InSlot.ItemName;
-		Quantity = InSlot.Quantity; EquipStatus = InSlot.EquipStatus;
+		Quantity = InSlot.Quantity;
 		return *this;
 	}
 
@@ -130,7 +131,80 @@ struct ADVANCEDCOMBAT_API FSlotStruct
 	// For Equipment 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EEquipCategory EquipCategory;
+};
+
+USTRUCT(BlueprintType)
+struct FACMagicStruct : public FTableRowBase
+{
+	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FEquipmentStatStruct EquipStatus;
+	int32 MagicID = -1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName MagicName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FGameplayTag MagicTag;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FString MagicDescription;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 NeedMP;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UTexture2D* Icon;
+};
+
+USTRUCT(BlueprintType)
+struct FWeaponStruct : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	FWeaponStruct() {};
+	FWeaponStruct(const FWeaponStruct& Other)
+	{
+		ID = Other.ID;
+		Name = Other.Name;
+		StaticMesh = Other.StaticMesh;
+		SkeletonMesh = Other.SkeletonMesh;
+		AttackPow = Other.AttackPow;
+		STRRate = Other.STRRate;
+		DEXRate = Other.DEXRate;
+		INTRate = Other.INTRate;
+	};
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	uint8 ID = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName Name = "Weapon";
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UStaticMesh* StaticMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USkeletalMesh* SkeletonMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName AbilityName = "";
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int AbilityMPCost = 50;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int Weight = 15;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float AttackPow = 1.0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float STRRate = 1.0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float DEXRate = 1.0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float INTRate = 1.0;
 };

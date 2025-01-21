@@ -91,5 +91,5 @@ public:
 	bool IsParryable();
 
 	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
-	void DealWithCombatCharacter(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, class ACombatPlayerCharacter* CombatCharacter);
+	virtual void DealWithDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, class AActor* DamageCauser) override;
 };

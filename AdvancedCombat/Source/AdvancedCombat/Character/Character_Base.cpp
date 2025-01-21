@@ -178,6 +178,43 @@ void ACharacter_Base::ShowHitReaction(EACHitReactDirection hitDirection)
 	}
 }
 
+void ACharacter_Base::ShowHitReaction_Inplace(EACHitReactDirection hitDirection)
+{
+	if (!AnimInst) return;
+
+	switch (hitDirection)
+	{
+	case EACHitReactDirection::None:
+		break;
+	case EACHitReactDirection::Left:
+	{
+		if (HitMontage_Left_Inplace)
+			AnimInst->Montage_Play(HitMontage_Left_Inplace);
+		break;
+	}
+	case EACHitReactDirection::Front:
+	{
+		if (HitMontage_Forward_Inplace)
+			AnimInst->Montage_Play(HitMontage_Forward_Inplace);
+		break;
+	}
+	case EACHitReactDirection::Right:
+	{
+		if (HitMontage_Right_Inplace)
+			AnimInst->Montage_Play(HitMontage_Right_Inplace);
+		break;
+	}
+	case EACHitReactDirection::Back:
+	{
+		if (HitMontage_Backward_Inplace)
+			AnimInst->Montage_Play(HitMontage_Backward_Inplace);
+		break;
+	}
+	default:
+		break;
+	}
+}
+
 void ACharacter_Base::ShowParriedReaction(EACHitReactDirection hitDirection)
 {
 	if (!AnimInst) return;

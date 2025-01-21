@@ -5,6 +5,15 @@
 #include "CoreMinimal.h"
 
 UENUM(BlueprintType)
+enum class EInputType : uint8
+{
+	Up,
+	Down,
+	Left,
+	Right
+};
+
+UENUM(BlueprintType)
 enum class ETaskResult : uint8
 {
 	// Task is executed Successly
@@ -56,6 +65,9 @@ enum class EDamageType : uint8
 	ParryableDamage,
 	UnbreakableDamage,
 	StingDamage,
+	AirborneDamage,
+	InAirDamage,
+	HitDownDamage
 };
 
 UENUM(BlueprintType)
@@ -68,9 +80,14 @@ enum class EParryType : uint8
 UENUM(BlueprintType)
 enum class EItemCategory : uint8
 {
-	EIC_Item,
-	EIC_Equipment,
-	EIC_None
+	None,
+	Weapon,
+	Rune,			// defense or specific effect
+	FragmentOfGod,	// Special skill
+	UseableItem,	// Useable Item
+	Magic,
+	Upgrades,		// weapon & potion upgrade Items
+	Hunting			// monster drop item
 };
 
 UENUM(BlueprintType)
@@ -97,4 +114,13 @@ enum class EWeaponType : uint8
 	EWT_DualBlade,
 	EWT_Spear,
 	EWT_Bow,
+};
+
+UENUM(BlueprintType)
+enum class EUpgradeItemType : uint8
+{
+	Sword,
+	Spear,
+	Staff,
+	Potion
 };

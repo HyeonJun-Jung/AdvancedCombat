@@ -3,6 +3,7 @@
 
 #include "Component/EquipComponent.h"
 #include "Character/Player/AbililtyCombatPlayerCharacter.h"
+#include "Character/Player/CombatPlayer_AnimInstance.h"
 #include "ACEnums.h"
 #include "AbilitySystemComponent.h"
 
@@ -21,9 +22,10 @@ UEquipComponent::UEquipComponent()
 void UEquipComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// ...
 	
+	AbililtyCharacter = Cast<AAbililtyCombatPlayerCharacter>(GetOwner());
+
+	ResetCombo();
 }
 
 
@@ -35,9 +37,9 @@ void UEquipComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 	// ...
 }
 
-void UEquipComponent::EquipItem(FSlotStruct& InSlot, FItemStruct& InItem)
+void UEquipComponent::EquipItem(const FItemStruct& InItem)
 {
-	AAbililtyCombatPlayerCharacter* Player = Cast<AAbililtyCombatPlayerCharacter>(GetOwner());
+	AAbililtyCombatPlayerCharacter* Player = AbililtyCharacter;
 	if (!Player) return;
 
 	if (InItem.EquipType == EEquipCategory::EEC_Weapon)
@@ -70,9 +72,11 @@ void UEquipComponent::EquipItem(FSlotStruct& InSlot, FItemStruct& InItem)
 			Player->GetMesh()->SetAnimInstanceClass(InItem.WeaponAnimInstance);
 		}
 
+		// Bind Delegate
+		Player->BindDelegateFunctions();
+
 		// Set Weapon Type
 		CurrentWeaponType = InItem.WeaponType;
-
 		
 		// Give Ability With Weapon (Attack Ability, Signature Ability)
 		UAbilitySystemComponent* ASC = Player->GetAbilitySystemComponent();
@@ -101,5 +105,45 @@ void UEquipComponent::EquipItem(FSlotStruct& InSlot, FItemStruct& InItem)
 		}
 	}
 
+}
+
+void UEquipComponent::ResetCombo()
+{
+	CurrentCombo = 1;
+	bShouldDoNextAttack = false;
+	bCanAttackInput = false;
+}
+
+void UEquipComponent::MontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (!bInterrupted)
+	{
+		ResetCombo();
+	}
+}
+
+void UEquipComponent::AttackInputStart()
+{
+	UE_LOG(LogTemp, Display, TEXT("AttackInputStart"));
+	bCanAttackInput = true;
+	bShouldDoNextAttack = false;
+}
+
+void UEquipComponent::CheckShouldAttack()
+{
+	UE_LOG(LogTemp, Display, TEXT("CheckShouldAttack"));
+
+	if (CurrentCombo >= MaxCombo || !bShouldDoNextAttack)
+	{
+		ResetCombo();
+		return;
+	}
+
+	if (bShouldDoNextAttack)
+	{
+		bShouldDoNextAttack = false;
+		FName NextSectionName = FName(FString::FromInt(++CurrentCombo));
+		AbililtyCharacter->AnimInst->Montage_JumpToSection(NextSectionName);
+	}
 }
 

@@ -9,6 +9,9 @@
 #include "Character/Ability/ACGameplayAbility_Base.h"
 #include "Character/Ability/ACGameplayEffect_Base.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/DamageEvents.h"
+#include "Character/DamageType/DamageTypes.h"
+#include "Actor/PatrolRoute.h"
 
 AEnemy_Base::AEnemy_Base()
 {
@@ -112,4 +115,109 @@ void AEnemy_Base::HealthChanged(const FOnAttributeChangeData& Data)
 	{
 		Die();
 	}*/
+}
+
+float AEnemy_Base::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float damage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+
+	if (damage > 0)
+	{
+		DealWithDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+	}
+	
+	return damage;
+}
+
+void AEnemy_Base::DealWithDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	FHitResult hitResult;
+	FVector ImpulseDir;
+
+	if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+	{
+		FPointDamageEvent* PointDamageEvent = (FPointDamageEvent*)&DamageEvent;
+		PointDamageEvent->GetBestHitInfo(this, EventInstigator, hitResult, ImpulseDir);
+	}
+	else if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))
+	{
+		FRadialDamageEvent* RadialDamageEvent = (FRadialDamageEvent*)&DamageEvent;
+		RadialDamageEvent->GetBestHitInfo(this, EventInstigator, hitResult, ImpulseDir);
+	}
+	else
+	{
+		DamageEvent.GetBestHitInfo(this, EventInstigator, hitResult, ImpulseDir);
+	}
+
+	EACHitReactDirection hitDirection = GetHitReactDirection(hitResult.ImpactPoint, DamageCauser);
+	EACHitReactDirection hitDir_RightLeft = GetRightOrLeft(hitResult.ImpactPoint, DamageCauser);
+
+
+	// Air Combo
+	if (DamageEvent.DamageTypeClass == UAirborneDamage::StaticClass())
+	{
+		LaunchCharacter(FVector(0, 0, 2500), false, false);
+		LimitMaxHeight(GetActorLocation().Z + 750.f);
+		ShowHitReaction_Inplace(hitDirection);
+	}
+	else if (DamageEvent.DamageTypeClass == UInAirDamage::StaticClass())
+	{
+		GetCharacterMovement()->Velocity.Z = 0;
+		DisableGravity(0.2f);
+		ShowHitReaction_Inplace(hitDirection);
+	}
+	else if (DamageEvent.DamageTypeClass == UHitDownDamage::StaticClass())
+	{
+		GetCharacterMovement()->GravityScale = 1.f;
+		LaunchCharacter(FVector(0, 0, -1250), false, false);
+
+		if (HitMontage_HitDown_Inplace)
+			AnimInst->Montage_Play(HitMontage_HitDown_Inplace);
+
+		LandedDelegate.AddDynamic(this, &AEnemy_Base::GetUpFromGround);
+	}
+	else
+	{
+		ShowHitReaction(hitDirection);
+	}
+}
+
+void AEnemy_Base::LimitMaxHeight(float InMaxHeight)
+{
+	maxHeight = InMaxHeight;
+	GetWorld()->GetTimerManager().SetTimer(handle_LimitMaxHeight,
+		[&]()
+		{
+			if (GetActorLocation().Z >= maxHeight)
+			{
+				GetCharacterMovement()->Velocity.Z = 0;
+				GetWorld()->GetTimerManager().ClearTimer(handle_LimitMaxHeight);
+			}
+		}, 0.01f, true);
+}
+
+void AEnemy_Base::DisableGravity(float duration)
+{
+	GetCharacterMovement()->GravityScale = 0.f;
+
+	FTimerHandle handle;
+	GetWorld()->GetTimerManager().SetTimer(handle,
+		[&]()
+		{
+			GetCharacterMovement()->GravityScale = 1.f;
+		},
+		duration, false);
+}
+
+void AEnemy_Base::GetUpFromGround(const FHitResult& hit)
+{
+	FTimerHandle handle;
+	GetWorld()->GetTimerManager().SetTimer(handle,
+		[&]()
+		{
+			if (HitMontage_GetUp)
+				AnimInst->Montage_Play(HitMontage_GetUp);
+			LandedDelegate.RemoveDynamic(this, &AEnemy_Base::GetUpFromGround);
+		},
+		0.2f, false);
 }

@@ -27,6 +27,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage|Dodge", meta = (AllowPrivateAccess = "true"))
 	UAnimMontage* DodgeMontage_Left;
 
+	// Guard
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage|Dodge", meta = (AllowPrivateAccess = "true"))
 	UAnimMontage* DodgeMontage_Right;
 
@@ -36,6 +38,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage|Guard", meta = (AllowPrivateAccess = "true"))
 	UAnimMontage* GuardSuccessMontage_Right;
 
+	// Parry
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage|Parry", meta = (AllowPrivateAccess = "true"))
 	UAnimMontage* ParryMontage;
 
@@ -44,6 +48,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage|Parried", meta = (AllowPrivateAccess = "true"))
 	UAnimMontage* ParriedMontage_Right;
+
+	// Hit RootMotion
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage|Damaged", meta = (AllowPrivateAccess = "true"))
 	UAnimMontage* HitMontage_Forward;
@@ -57,6 +63,25 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage|Damaged", meta = (AllowPrivateAccess = "true"))
 	UAnimMontage* HitMontage_Right;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage|Damaged", meta = (AllowPrivateAccess = "true"))
+	UAnimMontage* HitMontage_GetUp;
+
+	// Hit Inplace
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage|Damaged|Inplace", meta = (AllowPrivateAccess = "true"))
+	UAnimMontage* HitMontage_Forward_Inplace;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage|Damaged|Inplace", meta = (AllowPrivateAccess = "true"))
+	UAnimMontage* HitMontage_Backward_Inplace;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage|Damaged|Inplace", meta = (AllowPrivateAccess = "true"))
+	UAnimMontage* HitMontage_Left_Inplace;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage|Damaged|Inplace", meta = (AllowPrivateAccess = "true"))
+	UAnimMontage* HitMontage_Right_Inplace;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Montage|Damaged|Inplace", meta = (AllowPrivateAccess = "true"))
+	UAnimMontage* HitMontage_HitDown_Inplace;
 
 
 public:
@@ -90,6 +115,9 @@ public:
 
 	UFUNCTION()
 	virtual void ShowHitReaction(EACHitReactDirection hitDirection);
+
+	UFUNCTION()
+	virtual void ShowHitReaction_Inplace(EACHitReactDirection hitDirection);
 
 	UFUNCTION()
 	virtual void ShowParriedReaction(EACHitReactDirection hitDirection);

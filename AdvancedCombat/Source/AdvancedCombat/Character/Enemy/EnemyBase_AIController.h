@@ -7,6 +7,8 @@
 #include "Perception/AIPerceptionTypes.h"
 #include "EnemyBase_AIController.generated.h"
 
+class UPatrolComponent;
+
 UCLASS()
 class ADVANCEDCOMBAT_API AEnemyBase_AIController : public AAIController
 {
@@ -24,6 +26,14 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void OnPossess(APawn* InPawn) override;
+
+public:
+	bool StartPatrol();
+	void StopPatrol();
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UPatrolComponent> PatrolComponent;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = "true"))

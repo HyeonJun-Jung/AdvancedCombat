@@ -1,0 +1,37 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Blueprint/UserWidget.h"
+#include "ACEnums.h"
+#include "ACStructs.h"
+#include "Widget_Equipment.generated.h"
+
+class UWidgetSwitcher;
+class UWidget_EquipSelectWindow;
+
+UCLASS()
+class ADVANCEDCOMBAT_API UWidget_Equipment : public UUserWidget
+{
+	GENERATED_BODY()
+	
+public:
+	void ShowEquipWindow();
+	void ShowEquipSelect(EItemCategory Category, int slotIdx);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void UpdateStatusInfo();
+
+public:
+	UPROPERTY(meta = (BindWidget), BlueprintReadOnly, EditAnywhere)
+	UWidgetSwitcher* WidgetSwitcher;
+
+	UPROPERTY(meta = (BindWidget), BlueprintReadOnly, EditAnywhere)
+	UWidget_EquipSelectWindow* EquipSelect;
+
+public:
+	FORCEINLINE int GetEquipSelectSlotIdx() { return SlotIdx_EquipSelect; }
+private:
+	int SlotIdx_EquipSelect = 0;
+};

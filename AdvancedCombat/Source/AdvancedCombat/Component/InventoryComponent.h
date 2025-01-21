@@ -53,23 +53,38 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (AllowPrivateAccess = true))
 	uint8 CurrentQuickSlotNum = 0;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (AllowPrivateAccess = true))
 	TArray<FSlotStruct> QuickSlots;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (AllowPrivateAccess = true))
-	TArray<FSlotStruct> Contents;
+	TArray<FSlotStruct> None;
+
+	TArray<FSlotStruct> Weapons;
+
+	TArray<FSlotStruct> Runes;
+
+	TArray<FSlotStruct> FragmentOfGods;
+
+	TArray<FSlotStruct> UseableItems;
+
+	TArray<FSlotStruct> Upgrades;
+
+	TArray<FSlotStruct> Huntings;
+
+	TArray<FACMagicStruct> Magics;
 
 public:
 	void Interact();
 
 public:
+
 	FName GetFNameOfItemID(int ItemID);
 	UDataTable* GetItemDB() { return ItemDB; };
-	TArray<FSlotStruct>& GetContents() { return Contents; }
+	TArray<FSlotStruct>& GetContents(EItemCategory InCategory);
+	TArray<FACMagicStruct>& GetMagics();
 	TArray<FSlotStruct>& GetQuickSlots() { return QuickSlots; }
 	void GetAllSlotsOfCategory(TArray<FSlotStruct>& InSlotArray, EItemCategory InItemCategory, EEquipCategory InEquipCategory);
-	void LogInventoryContents();
+	void LogInventoryContents(EItemCategory InCategory);
 
+public:
 	UFUNCTION(BlueprintCallable)
 	void AddToInventory(FSlotStruct ItemSlot);
 
@@ -80,20 +95,17 @@ public:
 	void RemoveItem_QuickSlot(int SlotIndex, bool Consumed, int Quantity);
 
 	UFUNCTION(BlueprintCallable)
-	void RemoveItem(int SlotIndex, bool Consumed, int Quantity);
+	void RemoveItem(EItemCategory InCategory, int SlotIndex, bool Consumed, int Quantity);
 
-	void RemoveItem(int ItemID, int Quantity);
+	void RemoveItem(EItemCategory InCategory, int ItemID, int Quantity);
 
 	UFUNCTION(BlueprintCallable)
 	void ReplaceItem(int SlotIndex, FSlotStruct& ReplaceSlotData, int Quantity);
 
-	UFUNCTION(BlueprintCallable)
-	void Transfer_Slot(UInventoryComponent* SourceInv, int SourceIdx, int DestIdx);
-	void Transfer_Slot(UInventoryComponent* SourceInv, int SourceIdx, UInventoryComponent* DestInv, int DestIdx);
-	void Transfer_Slot_InvToQuick(int InventoryIdx, int QuickSlotIdx);
-	void Transfer_Slot_QuickToInv(int InventoryIdx, int QuickSlotIdx);
-	void Transfer_Slot_QuickToQuick(int SourceIdx, int DestIdx);
+	int GetItemQuantityFromID(EItemCategory InCategory, int itemID);
+	int GetItemQuantityFromSlot(EItemCategory InCategory, int slotIdx);
 
-	int GetItemQuantityFromID(int itemID);
-	int GetItemQuantityFromSlot(int slotIdx);
+private:
+	void InitInventory();
+	void InitMagic();
 };

@@ -8,6 +8,7 @@
 #include <Kismet/KismetTextLibrary.h>
 #include "Interface/Interact_Interface.h"
 #include "Actor/Item_Base.h"
+#include "Subsystem/InventorySubsystem.h"
 
 // Sets default values for this component's properties
 UInventoryComponent::UInventoryComponent()
@@ -35,17 +36,8 @@ void UInventoryComponent::BeginPlay()
 		UE_LOG(LogTemp, Warning, TEXT("UInventoryComponent : Can't Get Item DataTable."))
 	}
 
-	for (int i = 0; i < Inventory_Size; i++)
-	{
-		FSlotStruct item; item.ID = -1; item.Quantity = 0;
-		Contents.Add(item);
-	}
-
-	for (int i = 0; i < 8; i++)
-	{
-		FSlotStruct item; item.ID = -1; item.Quantity = 0;
-		QuickSlots.Add(item);
-	}
+	InitInventory();
+	InitMagic();
 }
 
 
@@ -98,26 +90,60 @@ FName UInventoryComponent::GetFNameOfItemID(int ItemID)
 	return  FName(*FString::FromInt(ItemID));
 }
 
+TArray<FSlotStruct>& UInventoryComponent::GetContents(EItemCategory InCategory)
+{
+	switch (InCategory)
+	{
+	case EItemCategory::None:
+		break;
+	case EItemCategory::Weapon:
+		return Weapons;
+		break;
+	case EItemCategory::Rune:
+		return Runes;
+		break;
+	case EItemCategory::FragmentOfGod:
+		return FragmentOfGods;
+		break;
+	case EItemCategory::UseableItem:
+		return UseableItems;
+		break;
+	case EItemCategory::Magic:
+		return None;
+		break;
+	case EItemCategory::Upgrades:
+		return Upgrades;
+		break;
+	case EItemCategory::Hunting:
+		return Huntings;
+		break;
+	default:
+		break;
+	}
+
+	return None;
+}
+
+TArray<FACMagicStruct>& UInventoryComponent::GetMagics()
+{
+	return Magics;
+}
+
 void UInventoryComponent::GetAllSlotsOfCategory(TArray<FSlotStruct>& InSlotArray, EItemCategory InItemCategory, EEquipCategory InEquipCategory)
 {
+	TArray<FSlotStruct>& Contents = GetContents(InItemCategory);
 	for (FSlotStruct& slot : Contents)
 	{
 		if (slot.Category == InItemCategory)
 		{
-			if (slot.Category == EItemCategory::EIC_Equipment && InEquipCategory == slot.EquipCategory)
-			{
-				InSlotArray.Add(slot);
-			}
-			else
-			{
-				InSlotArray.Add(slot);
-			}
+			InSlotArray.Add(slot);
 		}
 	}
 }
 
-void UInventoryComponent::LogInventoryContents()
+void UInventoryComponent::LogInventoryContents(EItemCategory InCategory)
 {
+	TArray<FSlotStruct>& Contents = GetContents(InCategory);
 	for (FSlotStruct slot : Contents)
 	{
 		if (slot.ID != -1)
@@ -141,23 +167,13 @@ void UInventoryComponent::AddToInventory(FSlotStruct ItemSlot)
 		return;
 	}
 
+	TArray<FSlotStruct>& Contents = GetContents(ItemSlot.Category);
 	for (FSlotStruct& slot : Contents)
 	{
-		if (slot.ID == ItemSlot.ID && slot.Category != EItemCategory::EIC_Equipment
-			&& slot.Quantity + ItemSlot.Quantity <= itemData->MaxStackSize)
+		if (slot.ID == ItemSlot.ID && slot.Quantity + ItemSlot.Quantity <= itemData->MaxStackSize)
 		{
 			slot.Quantity += ItemSlot.Quantity;
-
 			Delegate_InventoryUpdated.Broadcast();
-
-			//auto controller = Cast<ADPPlayerController>(GetOwner());
-			//if (IsValid(controller))
-			//{
-			//	Delegate_InventoryUpdated.Broadcast();
-			//	// controller->UpdateInventory();
-			//	controller->UpdateAcquire(itemData->Name, ItemSlot.Quantity);
-			//	controller->UpdateQuest_Item();
-			//}
 
 			return;
 		}
@@ -168,17 +184,7 @@ void UInventoryComponent::AddToInventory(FSlotStruct ItemSlot)
 		if (slot.Quantity == 0 || slot.ID == -1)
 		{
 			slot = ItemSlot;
-
 			Delegate_InventoryUpdated.Broadcast();
-
-			//auto controller = Cast<ADPPlayerController>(GetOwner());
-			//if (IsValid(controller))
-			//{
-			//	Delegate_InventoryUpdated.Broadcast();
-			//	// controller->UpdateInventory();
-			//	controller->UpdateAcquire(itemData->Name, ItemSlot.Quantity);
-			//	controller->UpdateQuest_Item();
-			//}
 
 			return;
 		}
@@ -187,6 +193,7 @@ void UInventoryComponent::AddToInventory(FSlotStruct ItemSlot)
 
 bool UInventoryComponent::AddToInventory_Slot(const FSlotStruct& ItemSlot, int slotIdx)
 {
+	TArray<FSlotStruct>& Contents = GetContents(ItemSlot.Category);
 	if (Contents[slotIdx].ID == ItemSlot.ID)
 	{
 		Contents[slotIdx].Quantity += ItemSlot.Quantity;
@@ -208,8 +215,10 @@ void UInventoryComponent::RemoveItem_QuickSlot(int SlotIndex, bool Consumed, int
 {
 }
 
-void UInventoryComponent::RemoveItem(int SlotIndex, bool Consumed, int Quantity)
+void UInventoryComponent::RemoveItem(EItemCategory InCategory, int SlotIndex, bool Consumed, int Quantity)
 {
+	TArray<FSlotStruct>& Contents = GetContents(InCategory);
+
 	if (Contents[SlotIndex].Quantity <= 0)
 		return;
 
@@ -230,8 +239,10 @@ void UInventoryComponent::RemoveItem(int SlotIndex, bool Consumed, int Quantity)
 	}
 }
 
-void UInventoryComponent::RemoveItem(int ItemID, int Quantity)
+void UInventoryComponent::RemoveItem(EItemCategory InCategory, int ItemID, int Quantity)
 {
+	TArray<FSlotStruct>& Contents = GetContents(InCategory);
+
 	int RemovedQuantity = 0;
 	for (auto& slot : Contents)
 	{
@@ -257,246 +268,14 @@ void UInventoryComponent::RemoveItem(int ItemID, int Quantity)
 
 void UInventoryComponent::ReplaceItem(int SlotIndex, FSlotStruct& ReplaceSlotData, int Quantity)
 {
+	TArray<FSlotStruct>& Contents = GetContents(ReplaceSlotData.Category);
 	Contents[SlotIndex] = ReplaceSlotData;
 }
 
-void UInventoryComponent::Transfer_Slot(UInventoryComponent* SourceInv, int SourceIdx, int DestIdx)
-{
-	TArray<FSlotStruct>& SourceContents = SourceInv->GetContents();
-	TArray<FSlotStruct>& DestContents = GetContents();
-
-	// Case : SourceItemID == DestItemID
-	if (DestContents[DestIdx].ID == SourceContents[SourceIdx].ID)
-	{
-		if (SourceIdx == DestIdx && SourceInv == this)
-			return;
-
-		UE_LOG(LogTemp, Warning, TEXT("Local Contests[%d] : %s"), DestIdx, *DestContents[DestIdx].ItemName.ToString());
-		UE_LOG(LogTemp, Warning, TEXT("Source Contests[%d] : %s"), SourceIdx, *SourceContents[DestIdx].ItemName.ToString());
-		FItemStruct* itemData = ItemDB->FindRow<FItemStruct>(GetFNameOfItemID(DestContents[DestIdx].ID), DestContents[DestIdx].ItemName.ToString());
-		if (!itemData)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("UInventoryComponent : Can't find Item ID <%s> From Contents."), *DestContents[DestIdx].ItemName.ToString());
-			return;
-		}
-
-		// Case : Dest ItemQuantity + Source ItemQuantity <= MaxStackSize
-		if (DestContents[DestIdx].Quantity + SourceContents[SourceIdx].Quantity <= itemData->MaxStackSize)
-		{
-			DestContents[DestIdx].Quantity += SourceContents[SourceIdx].Quantity;
-			SourceContents[SourceIdx].Quantity = 0;
-			SourceContents[SourceIdx].ID = -1;
-		}
-		// Case : Dest ItemQuantity + Source ItemQuantity > MaxStackSize
-		else
-		{
-			int TransferQuantity
-				= DestContents[DestIdx].Quantity + SourceContents[SourceIdx].Quantity - itemData->MaxStackSize;
-
-			DestContents[DestIdx].Quantity += TransferQuantity;
-			SourceContents[SourceIdx].Quantity -= TransferQuantity;
-		}
-	}
-	// Case : SourceItemID != DestItemID
-	else
-	{
-		FSlotStruct LocalSlot = DestContents[DestIdx];
-		FSlotStruct SrcSlot = SourceContents[SourceIdx];
-		DestContents[DestIdx] = SrcSlot;
-		SourceContents[SourceIdx] = LocalSlot;
-	}
-
-	/*auto controller = Cast<ADPPlayerController>(GetOwner());
-	if (IsValid(controller))
-	{
-		Delegate_InventoryUpdated.Broadcast();
-	}*/
-}
-
-void UInventoryComponent::Transfer_Slot(UInventoryComponent* SourceInv, int SourceIdx, UInventoryComponent* DestInv, int DestIdx)
-{
-	TArray<FSlotStruct>& SourceContents = SourceInv->GetContents();
-	TArray<FSlotStruct>& DestContents = DestInv->GetContents();
-
-	// Case : SourceItemID == DestItemID
-	if (DestContents[DestIdx].ID == SourceContents[SourceIdx].ID)
-	{
-		if (SourceIdx == DestIdx && SourceInv == DestInv)
-			return;
-
-		UE_LOG(LogTemp, Warning, TEXT("Local Contests[%d] : %s"), DestIdx, *DestContents[DestIdx].ItemName.ToString());
-		UE_LOG(LogTemp, Warning, TEXT("Source Contests[%d] : %s"), SourceIdx, *SourceContents[DestIdx].ItemName.ToString());
-		FItemStruct* itemData = ItemDB->FindRow<FItemStruct>(GetFNameOfItemID(DestContents[DestIdx].ID), DestContents[DestIdx].ItemName.ToString());
-		if (!itemData)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("UInventoryComponent : Can't find Item ID <%s> From Contents."), *DestContents[DestIdx].ItemName.ToString());
-			return;
-		}
-
-		// Case : Dest ItemQuantity + Source ItemQuantity <= MaxStackSize
-		if (DestContents[DestIdx].Quantity + SourceContents[SourceIdx].Quantity <= itemData->MaxStackSize)
-		{
-			DestContents[DestIdx].Quantity += SourceContents[SourceIdx].Quantity;
-			SourceContents[SourceIdx].Quantity = 0;
-			SourceContents[SourceIdx].ID = -1;
-		}
-		// Case : Dest ItemQuantity + Source ItemQuantity > MaxStackSize
-		else
-		{
-			int TransferQuantity
-				= DestContents[DestIdx].Quantity + SourceContents[SourceIdx].Quantity - itemData->MaxStackSize;
-
-			DestContents[DestIdx].Quantity += TransferQuantity;
-			SourceContents[SourceIdx].Quantity -= TransferQuantity;
-		}
-	}
-	// Case : SourceItemID != DestItemID
-	else
-	{
-		FSlotStruct LocalSlot = DestContents[DestIdx];
-		FSlotStruct SrcSlot = SourceContents[SourceIdx];
-		DestContents[DestIdx] = SrcSlot;
-		SourceContents[SourceIdx] = LocalSlot;
-	}
-
-	Delegate_InventoryUpdated.Broadcast();
-}
-
-void UInventoryComponent::Transfer_Slot_InvToQuick(int InventoryIdx, int QuickSlotIdx)
-{
-	TArray<FSlotStruct>& Inventory = GetContents();
-	TArray<FSlotStruct>& QuickSlot = GetQuickSlots();
-
-	// Case : SourceItemID == DestItemID
-	if (Inventory[InventoryIdx].ID == QuickSlot[QuickSlotIdx].ID)
-	{
-		FItemStruct* itemData = ItemDB->FindRow<FItemStruct>(GetFNameOfItemID( Inventory[InventoryIdx].ID), Inventory[InventoryIdx].ItemName.ToString());
-		if (!itemData)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("UInventoryComponent : Can't find Item ID <%s> From Contents."), *Inventory[InventoryIdx].ItemName.ToString());
-			return;
-		}
-
-		// Case : Dest ItemQuantity + Source ItemQuantity <= MaxStackSize
-		if (QuickSlot[QuickSlotIdx].Quantity + Inventory[InventoryIdx].Quantity <= itemData->MaxStackSize)
-		{
-			QuickSlot[QuickSlotIdx].Quantity += Inventory[InventoryIdx].Quantity;
-			Inventory[InventoryIdx].Quantity = 0;
-			Inventory[InventoryIdx].ID = -1;
-		}
-		// Case : Dest ItemQuantity + Source ItemQuantity > MaxStackSize
-		else
-		{
-			int TransferQuantity
-				= QuickSlot[QuickSlotIdx].Quantity + Inventory[InventoryIdx].Quantity - itemData->MaxStackSize;
-
-			QuickSlot[QuickSlotIdx].Quantity += TransferQuantity;
-			Inventory[InventoryIdx].Quantity -= TransferQuantity;
-		}
-	}
-	else
-	{
-		FSlotStruct InvLocalSlot = Inventory[InventoryIdx];
-		FSlotStruct QuickLocalSlot = QuickSlot[QuickSlotIdx];
-		Inventory[InventoryIdx] = QuickLocalSlot;
-		QuickSlot[QuickSlotIdx] = InvLocalSlot;
-	}
-
-
-	Delegate_InventoryUpdated.Broadcast();
-}
-
-void UInventoryComponent::Transfer_Slot_QuickToInv(int InventoryIdx, int QuickSlotIdx)
-{
-	TArray<FSlotStruct>& Inventory = GetContents();
-	TArray<FSlotStruct>& QuickSlot = GetQuickSlots();
-
-	// Case : SourceItemID == DestItemID
-	if (Inventory[InventoryIdx].ID == QuickSlot[QuickSlotIdx].ID)
-	{
-		FItemStruct* itemData = ItemDB->FindRow<FItemStruct>(GetFNameOfItemID(Inventory[InventoryIdx].ID), Inventory[InventoryIdx].ItemName.ToString());
-		if (!itemData)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("APlayer_Controller : Can't find Item ID <%s> From Contents."), *Inventory[InventoryIdx].ItemName.ToString());
-			return;
-		}
-
-		// Case : Dest ItemQuantity + Source ItemQuantity <= MaxStackSize
-		if (QuickSlot[QuickSlotIdx].Quantity + Inventory[InventoryIdx].Quantity <= itemData->MaxStackSize)
-		{
-			Inventory[QuickSlotIdx].Quantity += QuickSlot[InventoryIdx].Quantity;
-			QuickSlot[InventoryIdx].Quantity = 0;
-			QuickSlot[InventoryIdx].ID = -1;
-		}
-		// Case : Dest ItemQuantity + Source ItemQuantity > MaxStackSize
-		else
-		{
-			int TransferQuantity
-				= QuickSlot[QuickSlotIdx].Quantity + Inventory[InventoryIdx].Quantity - itemData->MaxStackSize;
-
-			Inventory[QuickSlotIdx].Quantity += TransferQuantity;
-			QuickSlot[InventoryIdx].Quantity -= TransferQuantity;
-		}
-	}
-	else
-	{
-		FSlotStruct InvLocalSlot = Inventory[InventoryIdx];
-		FSlotStruct QuickLocalSlot = QuickSlot[QuickSlotIdx];
-		Inventory[InventoryIdx] = QuickLocalSlot;
-		QuickSlot[QuickSlotIdx] = InvLocalSlot;
-	}
-
-	Delegate_InventoryUpdated.Broadcast();
-}
-
-void UInventoryComponent::Transfer_Slot_QuickToQuick(int SourceIdx, int DestIdx)
-{
-	if (SourceIdx == DestIdx)
-		return;
-
-	TArray<FSlotStruct>& QuickSlot = GetQuickSlots();
-
-	// Case : SourceItemID == DestItemID
-	if (QuickSlot[SourceIdx].ID == QuickSlot[DestIdx].ID)
-	{
-		FItemStruct* itemData = ItemDB->FindRow<FItemStruct>(GetFNameOfItemID( QuickSlot[SourceIdx].ID), QuickSlot[SourceIdx].ItemName.ToString());
-		if (!itemData)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("APlayer_Controller : Can't find Item ID <%s> From Contents."), *QuickSlot[SourceIdx].ItemName.ToString());
-			return;
-		}
-
-		// Case : Dest ItemQuantity + Source ItemQuantity <= MaxStackSize
-		if (QuickSlot[SourceIdx].Quantity + QuickSlot[DestIdx].Quantity <= itemData->MaxStackSize)
-		{
-			QuickSlot[DestIdx].Quantity += QuickSlot[SourceIdx].Quantity;
-			QuickSlot[SourceIdx].Quantity = 0;
-			QuickSlot[SourceIdx].ID = -1;
-		}
-		// Case : Dest ItemQuantity + Source ItemQuantity > MaxStackSize
-		else
-		{
-			int TransferQuantity
-				= QuickSlot[SourceIdx].Quantity + QuickSlot[DestIdx].Quantity - itemData->MaxStackSize;
-
-			QuickSlot[DestIdx].Quantity += TransferQuantity;
-			QuickSlot[SourceIdx].Quantity -= TransferQuantity;
-		}
-	}
-	else
-	{
-		FSlotStruct SourceLocalSlot = QuickSlot[SourceIdx];
-		FSlotStruct DestLocalSlot = QuickSlot[DestIdx];
-		QuickSlot[SourceIdx] = DestLocalSlot;
-		QuickSlot[DestIdx] = SourceLocalSlot;
-	}
-
-	Delegate_InventoryUpdated.Broadcast();
-}
-
-int UInventoryComponent::GetItemQuantityFromID(int itemID)
+int UInventoryComponent::GetItemQuantityFromID(EItemCategory InCategory, int itemID)
 {
 	int Quantity = 0;
+	TArray<FSlotStruct>& Contents = GetContents(InCategory);
 	for (auto& slot : Contents)
 	{
 		if (slot.ID == itemID)
@@ -507,9 +286,60 @@ int UInventoryComponent::GetItemQuantityFromID(int itemID)
 	return Quantity;
 }
 
-int UInventoryComponent::GetItemQuantityFromSlot(int slotIdx)
+int UInventoryComponent::GetItemQuantityFromSlot(EItemCategory InCategory, int slotIdx)
 {
+	TArray<FSlotStruct>& Contents = GetContents(InCategory);
 	if (Contents.IsValidIndex(slotIdx))
 		return Contents[slotIdx].Quantity;
 	return 0;
+}
+
+void UInventoryComponent::InitInventory()
+{
+	for (int i = 0; i < Inventory_Size; i++)
+	{
+		FSlotStruct item; item.ID = -1; item.Quantity = 0;
+		Weapons.Add(item);
+	}
+
+	for (int i = 0; i < Inventory_Size; i++)
+	{
+		FSlotStruct item; item.ID = -1; item.Quantity = 0;
+		Runes.Add(item);
+	}
+
+	for (int i = 0; i < Inventory_Size; i++)
+	{
+		FSlotStruct item; item.ID = -1; item.Quantity = 0;
+		FragmentOfGods.Add(item);
+	}
+
+	for (int i = 0; i < Inventory_Size; i++)
+	{
+		FSlotStruct item; item.ID = -1; item.Quantity = 0;
+		UseableItems.Add(item);
+	}
+
+	for (int i = 0; i < Inventory_Size; i++)
+	{
+		FSlotStruct item; item.ID = -1; item.Quantity = 0;
+		Upgrades.Add(item);
+	}
+
+	for (int i = 0; i < Inventory_Size; i++)
+	{
+		FSlotStruct item; item.ID = -1; item.Quantity = 0;
+		Huntings.Add(item);
+	}
+}
+
+void UInventoryComponent::InitMagic()
+{
+	UInventorySubsystem* invSystem = GetWorld()->GetGameInstance()->GetSubsystem<UInventorySubsystem>();
+
+	const TMap<int, FACMagicStruct>& magicMap = invSystem->GetMagicMap();
+	for (auto& magic : magicMap)
+	{
+		Magics.Add(magic.Value);
+	}
 }

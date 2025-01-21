@@ -100,21 +100,21 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	/** Returns Combat AnimInstanc **/
+	FORCEINLINE class UCombatPlayer_AnimInstance* GetCombatAnimInst() const { return CombatAnimInst; }
+
+public:
+	void BindDelegateFunctions();
 
 protected:
 	UPROPERTY()
 	class UCombatPlayer_AnimInstance* CombatAnimInst;
-
 
 public:
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 protected:
 	void SetupGASInputComponent();
-
-	//// Apply GASInputDataAsset 
-	//void GiveGASAbilities(UGASInputDataAsset* InAbilityAsset);
-	//void RemoveGASAbilities(UGASInputDataAsset* InAbilityAsset);
 
 	// GAS Input Function
 	void GASInputPressed(EACAbilityInputID InputId);
@@ -123,11 +123,22 @@ protected:
 	// Set Default Input Abilities 
 	void SetDefaultInputAbilities();
 
+	// Set Default Abilities
+	void SetDefaultAbilities();
+
 	// Bind TargetData Confirm & Cancel Input
 	// Called from both SetupPlayerInputComponent and OnRep_PlayerState because of a potential race condition where the PlayerController might
 	// call ClientRestart which calls SetupPlayerInputComponent before the PlayerState is repped to the client so the PlayerState would be null in SetupPlayerInputComponent.
 	// Conversely, the PlayerState might be repped before the PlayerController calls ClientRestart so the Actor's InputComponent would be null in OnRep_PlayerState.
 	void BindASCInput();
+
+	// Magic
+protected:
+	UFUNCTION()
+	void MagicStaff_Callback();
+
+	UFUNCTION()
+	void MagicHand_Callback();
 
 protected:
 	void LevelUp_Callback(const FOnAttributeChangeData& AttributeChangeData);
@@ -141,4 +152,5 @@ protected:
 	TMap<EACAbilityInputID, TSubclassOf<class UACGameplayAbility_Base>> DefaultInputAbilities;
 
 	bool ASCInputBound = false;
+
 };

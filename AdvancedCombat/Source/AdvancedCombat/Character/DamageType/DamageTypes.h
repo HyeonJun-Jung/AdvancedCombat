@@ -43,3 +43,24 @@ class ADVANCEDCOMBAT_API UStingDamage : public UDamageType
 	GENERATED_BODY()
 
 };
+
+UCLASS()
+class ADVANCEDCOMBAT_API UAirborneDamage : public UDamageType
+{
+	GENERATED_BODY()
+
+};
+
+UCLASS()
+class ADVANCEDCOMBAT_API UInAirDamage : public UDamageType
+{
+	GENERATED_BODY()
+
+};
+
+UCLASS()
+class ADVANCEDCOMBAT_API UHitDownDamage : public UDamageType
+{
+	GENERATED_BODY()
+
+};

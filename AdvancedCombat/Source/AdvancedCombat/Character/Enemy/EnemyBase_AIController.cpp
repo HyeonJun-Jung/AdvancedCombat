@@ -11,6 +11,8 @@
 #include "Perception/AIPerceptionComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
+#include "Component/PatrolComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 AEnemyBase_AIController::AEnemyBase_AIController(FObjectInitializer const& object_initializer)
 {
@@ -24,6 +26,8 @@ AEnemyBase_AIController::AEnemyBase_AIController(FObjectInitializer const& objec
 
 	SetPerceptionComponent(*CreateOptionalDefaultSubobject<UAIPerceptionComponent>(TEXT("AI Perception")));
 	SetAIPerception();
+
+	PatrolComponent = CreateDefaultSubobject<UPatrolComponent>(FName("PatrolComponent"));
 }
 
 void AEnemyBase_AIController::BeginPlay()
@@ -58,6 +62,19 @@ void AEnemyBase_AIController::OnPossess(APawn* InPawn)
 		UE_LOG(LogTemp, Warning, TEXT("AEnemyBase_AIController : Blackboard is not valid."));
 
 }
+
+bool AEnemyBase_AIController::StartPatrol()
+{
+	UCharacterMovementComponent* moveComp = GetPawn()->GetComponentByClass<UCharacterMovementComponent>();
+	if (!moveComp) return false; 
+	return PatrolComponent->StartPatrol(moveComp->MaxWalkSpeed, Blackboard);
+}
+
+void AEnemyBase_AIController::StopPatrol()
+{
+	PatrolComponent->StopPatrol();
+}
+
 void AEnemyBase_AIController::OnTargetDetected(AActor* actor, FAIStimulus const Stimulus)
 {
 	if (!IsValid(Blackboard))

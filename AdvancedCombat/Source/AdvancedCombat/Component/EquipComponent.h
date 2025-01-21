@@ -9,6 +9,8 @@
 #include "AbilitySystemComponent.h"
 #include "EquipComponent.generated.h"
 
+class AAbililtyCombatPlayerCharacter;
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ADVANCEDCOMBAT_API UEquipComponent : public UActorComponent
 {
@@ -37,6 +39,31 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
-	void EquipItem(FSlotStruct& InSlot, FItemStruct& InItem);
+	void EquipItem(const FItemStruct& InItem);
+
+public:
+	void ResetCombo();
+
+	UFUNCTION()
+	void AttackInputStart();
+
+	UFUNCTION()
+	void CheckShouldAttack();
+
+	UFUNCTION()
+	void MontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+private:
+	AAbililtyCombatPlayerCharacter* AbililtyCharacter;
+
+public:
+	UPROPERTY(BlueprintReadWrite)
+	bool bCanAttackInput;
+	UPROPERTY(BlueprintReadWrite)
+	bool bShouldDoNextAttack;
+	UPROPERTY(BlueprintReadWrite)
+	int CurrentCombo;
+	UPROPERTY(BlueprintReadWrite)
+	int MaxCombo;
 
 };
