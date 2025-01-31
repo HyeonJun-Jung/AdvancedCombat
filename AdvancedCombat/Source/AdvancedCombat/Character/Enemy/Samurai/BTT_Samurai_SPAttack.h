@@ -49,6 +49,6 @@ public:
 
 public:
 	UFUNCTION()
-	void OnAttackParried();
+	void OnAttackParried(EACHitReactDirection hitDirecton);
 	
 };

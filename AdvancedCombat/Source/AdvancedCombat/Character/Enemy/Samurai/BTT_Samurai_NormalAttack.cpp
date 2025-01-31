@@ -30,6 +30,7 @@ EBTNodeResult::Type UBTT_Samurai_NormalAttack::ExecuteTask(UBehaviorTreeComponen
 	Samurai->AnimInst->OnMontageEnded.AddDynamic(this, &UBTT_Samurai_NormalAttack::OnIntrruptedCallback);
 
 	// Play Montage
+	Samurai->RandomComboAttack();
 
 	return EBTNodeResult::InProgress;
 }

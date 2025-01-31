@@ -31,7 +31,7 @@ EBTNodeResult::Type UBTT_Samurai_SPAttack::ExecuteTask(UBehaviorTreeComponent& O
 
 	// Binding Function
 	Samurai->AnimInst->OnMontageEnded.AddDynamic(this, &UBTT_Samurai_SPAttack::OnIntrruptedCallback);
-	Samurai->Delegate_Parried.AddUObject(this, &UBTT_Samurai_SPAttack::OnAttackParried);
+	Samurai->Delegate_Parried.AddDynamic(this, &UBTT_Samurai_SPAttack::OnAttackParried);
 
 	return EBTNodeResult::InProgress;
 }
@@ -70,10 +70,11 @@ void UBTT_Samurai_SPAttack::OnIntrruptedCallback(UAnimMontage* Montage, bool Int
 	}
 }
 
-void UBTT_Samurai_SPAttack::OnAttackParried()
+void UBTT_Samurai_SPAttack::OnAttackParried(EACHitReactDirection hitDirecton)
 {
 	UE_LOG(LogTemp, Warning, TEXT("%s : Attack Parried."), *GetName());
 	IsMontagePlaying = false;
+	Samurai->ShowParriedReaction(hitDirecton);
 }
 
 

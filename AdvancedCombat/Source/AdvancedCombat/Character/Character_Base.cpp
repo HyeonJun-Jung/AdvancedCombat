@@ -11,6 +11,7 @@
 #include "Ability/ACGameplayAbility_Base.h"
 #include "Ability/ACGameplayEffect_Base.h"
 #include "Ability/AttributeSets/ACAttributeSet_Base.h"
+#include "DamageType/DamageTypes.h"
 
 // Sets default values
 ACharacter_Base::ACharacter_Base()
@@ -63,7 +64,26 @@ float ACharacter_Base::TakeDamage(float Damage, FDamageEvent const& DamageEvent,
 {
 	Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 
-	Delegate_TakeDamage.Broadcast();
+	FHitResult hitResult;
+	FVector ImpulseDir;
+
+	if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+	{
+		FPointDamageEvent* PointDamageEvent = (FPointDamageEvent*)&DamageEvent;
+		PointDamageEvent->GetBestHitInfo(this, EventInstigator, hitResult, ImpulseDir);
+	}
+	else if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))
+	{
+		FRadialDamageEvent* RadialDamageEvent = (FRadialDamageEvent*)&DamageEvent;
+		RadialDamageEvent->GetBestHitInfo(this, EventInstigator, hitResult, ImpulseDir);
+	}
+	else
+	{
+		DamageEvent.GetBestHitInfo(this, EventInstigator, hitResult, ImpulseDir);
+	}
+
+	EACHitReactDirection hitDirection = GetHitReactDirection(hitResult.ImpactPoint, DamageCauser);
+	Delegate_TakeDamage.Broadcast(DamageCauser, GetDamageType(DamageEvent), hitDirection);
 
 	return Damage;
 }
@@ -71,6 +91,26 @@ float ACharacter_Base::TakeDamage(float Damage, FDamageEvent const& DamageEvent,
 void ACharacter_Base::Died()
 {
 	bIsAlive = false;
+}
+
+EDamageType ACharacter_Base::GetDamageType(FDamageEvent const& DamageEvent)
+{
+	if (DamageEvent.DamageTypeClass == UGuardableDamage::StaticClass())
+		return EDamageType::GuardableDamage;
+	else if (DamageEvent.DamageTypeClass == UParryableDamage::StaticClass())
+		return EDamageType::ParryableDamage;
+	else if (DamageEvent.DamageTypeClass == UStingDamage::StaticClass())
+		return EDamageType::StingDamage;
+	else if (DamageEvent.DamageTypeClass == UUnbreakableDamage::StaticClass())
+		return EDamageType::UnbreakableDamage;
+	else if (DamageEvent.DamageTypeClass == UInAirDamage::StaticClass())
+		return EDamageType::InAirDamage;
+	else if (DamageEvent.DamageTypeClass == UHitDownDamage::StaticClass())
+		return EDamageType::HitDownDamage;
+	else if (DamageEvent.DamageTypeClass == UAirborneDamage::StaticClass())
+		return EDamageType::AirborneDamage;
+
+	return EDamageType::NormalDamage;
 }
 
 EACHitReactDirection ACharacter_Base::GetHitReactDirection(const FVector& ImpactPoint, AActor* DamageCauser)

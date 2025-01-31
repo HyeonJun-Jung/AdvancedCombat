@@ -239,7 +239,7 @@ void ASamurai::DealWithDamage(float Damage, FDamageEvent const& DamageEvent, ACo
 			ACombatPlayerCharacter* CombatCharacter = Cast<ACombatPlayerCharacter>(DamageCauser);
 			if (!CombatCharacter) return;
 
-			CombatCharacter->Delegate_Parried.Broadcast();
+			CombatCharacter->Delegate_Parried.Broadcast(hitDirection);
 			CombatCharacter->ShowParriedReaction(hitDirection);
 
 			AnimInst->Montage_Play(ParryMontage);

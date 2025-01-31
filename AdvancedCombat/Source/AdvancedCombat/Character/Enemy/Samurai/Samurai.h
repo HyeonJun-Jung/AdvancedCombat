@@ -74,6 +74,8 @@ public:
 	// Special Attack
 	void SpecialAttack(int AttackIdx);
 	void JumpAttack();
+
+	UFUNCTION(BlueprintCallable)
 	void StingFailed();
 
 	UFUNCTION()

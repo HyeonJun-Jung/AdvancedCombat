@@ -9,8 +9,8 @@
 #include "ACEnums.h"
 #include "Character_Base.generated.h"
 
-DECLARE_MULTICAST_DELEGATE(FAttackParried);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FTakeDamage);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAttackParried, EACHitReactDirection, hitDirection);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FTakeDamage, AActor*, DamageCauser, EDamageType, DamageType, EACHitReactDirection, hitDirection);
 
 UCLASS()
 class ADVANCEDCOMBAT_API ACharacter_Base : public ACharacter, public IAbilitySystemInterface
@@ -110,6 +110,7 @@ public:
 	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 	virtual void Died();
 
+	EDamageType GetDamageType(struct FDamageEvent const& DamageEvent);
 	EACHitReactDirection GetHitReactDirection(const FVector& ImpactPoint, AActor* DamageCauser);
 	EACHitReactDirection GetRightOrLeft(const FVector& ImpactPoint, AActor* DamageCauser);
 
@@ -122,7 +123,9 @@ public:
 	UFUNCTION()
 	virtual void ShowParriedReaction(EACHitReactDirection hitDirection);
 
+
 public:
+	UPROPERTY(BlueprintCallable)
 	FAttackParried Delegate_Parried;
 
 	UPROPERTY(BlueprintAssignable)
