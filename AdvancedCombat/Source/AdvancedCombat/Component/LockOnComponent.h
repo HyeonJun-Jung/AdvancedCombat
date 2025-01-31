@@ -26,7 +26,11 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
+	UFUNCTION(BlueprintCallable)
 	void LockOn();
+
+private:
+	void SetRoationSetting(bool bLockOn);
 
 public:
 	UPROPERTY()

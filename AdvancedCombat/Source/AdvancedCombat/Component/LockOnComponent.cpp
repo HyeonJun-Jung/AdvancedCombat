@@ -6,6 +6,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values for this component's properties
 ULockOnComponent::ULockOnComponent()
@@ -58,6 +59,7 @@ void ULockOnComponent::LockOn()
 	if (TargetActor)
 	{
 		TargetActor = nullptr;
+		SetRoationSetting(false);
 		return;
 	}
 
@@ -99,5 +101,35 @@ void ULockOnComponent::LockOn()
 
 	// Set TargetActor
 	TargetActor = nearestActor;
+
+	if (IsValid(TargetActor))
+	{
+		SetRoationSetting(true);
+	}
+}
+
+void ULockOnComponent::SetRoationSetting(bool bLockOn)
+{
+	if (!player) return;
+	UCharacterMovementComponent* movementComp = player->GetCharacterMovement();
+
+	if (bLockOn)
+	{
+		movementComp->bUseControllerDesiredRotation = true;
+		movementComp->bOrientRotationToMovement = false;
+
+		player->bUseControllerRotationPitch = false;
+		player->bUseControllerRotationYaw = true;
+		player->bUseControllerRotationRoll = false;
+	}
+	else
+	{
+		movementComp->bUseControllerDesiredRotation = false;
+		movementComp->bOrientRotationToMovement = true;
+
+		player->bUseControllerRotationPitch = true;
+		player->bUseControllerRotationYaw = false;
+		player->bUseControllerRotationRoll = true;
+	}
 }
 
