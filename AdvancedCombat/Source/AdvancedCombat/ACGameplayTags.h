@@ -13,6 +13,20 @@ public:
 
 	static void InitializeNativeGameplayTags();
 
+	////////// Character ////////
+
+	// State
+	FGameplayTag Character_State_Attacking;
+	FGameplayTag Character_State_Damaged;
+	FGameplayTag Character_State_Defensing;
+	FGameplayTag Character_State_Dodging;
+	FGameplayTag Character_State_Jumping;
+	FGameplayTag Character_State_Parryable;
+	FGameplayTag Character_State_Running;
+
+	// Ability
+	FGameplayTag Character_Ability_Run;
+
 	////////// UI /////////
 
 	// Layer

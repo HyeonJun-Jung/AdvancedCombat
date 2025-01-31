@@ -8,6 +8,46 @@ FACGameplayTags FACGameplayTags::GameplayTags;
 
 void FACGameplayTags::InitializeNativeGameplayTags()
 {
+	GameplayTags.Character_State_Attacking = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Character.State.Attacking"),
+		FString("Attacking")
+	);
+
+	GameplayTags.Character_State_Damaged = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Character.State.Damaged"),
+		FString("Damaged")
+	);
+
+	GameplayTags.Character_State_Defensing = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Character.State.Defensing"),
+		FString("Defensing")
+	);
+
+	GameplayTags.Character_State_Dodging = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Character.State.Dodging"),
+		FString("Dodging")
+	);
+
+	GameplayTags.Character_State_Jumping = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Character.State.Jumping"),
+		FString("Jumping")
+	);
+
+	GameplayTags.Character_State_Parryable = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Character.State.Parryable"),
+		FString("Parryable")
+	);
+
+	GameplayTags.Character_State_Running = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Character.State.Running"),
+		FString("Running")
+	);
+
+	GameplayTags.Character_Ability_Run = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Character.Ability.Run"),
+		FString("Run")
+	);
+
 	GameplayTags.UI_Layer_Game = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("UI.Layer.Game"),
 		FString("Player Status, Weapon Slots . . .")

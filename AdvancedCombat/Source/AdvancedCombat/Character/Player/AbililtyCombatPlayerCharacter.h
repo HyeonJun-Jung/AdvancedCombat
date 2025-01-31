@@ -13,6 +13,7 @@
 #include "Delegates/Delegate.h"
 #include "AbililtyCombatPlayerCharacter.generated.h"
 
+class ULockOnComponent;
 class USpringArmComponent;
 class UCameraComponent;
 class UInventoryComponent;
@@ -27,6 +28,10 @@ class ADVANCEDCOMBAT_API AAbililtyCombatPlayerCharacter : public ACharacter_Base
 	GENERATED_BODY()
 
 public:
+	/** LockOn Component */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	ULockOnComponent* LockOnComponent;
+
 	/** Component For Equipment */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UEquipComponent* EquipComponent;
@@ -43,6 +48,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* RightWeapon_Skeletal;
 
+	/** Run Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* RunAction;
+
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* JumpAction;
@@ -57,7 +66,15 @@ public:
 
 	/** Attack Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* LockOnAction;
+
+	/** Attack Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* AttackAction;
+
+	/** Defense Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* DefenseAction;
 
 	/** Weapon Ability Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -131,6 +148,10 @@ protected:
 	// call ClientRestart which calls SetupPlayerInputComponent before the PlayerState is repped to the client so the PlayerState would be null in SetupPlayerInputComponent.
 	// Conversely, the PlayerState might be repped before the PlayerController calls ClientRestart so the Actor's InputComponent would be null in OnRep_PlayerState.
 	void BindASCInput();
+
+public:
+	// HP, MP, Stamina Updated
+	void BindStatusWidgetFunction(class UWidget_Status* InWidget);
 
 	// Magic
 protected:

@@ -25,8 +25,10 @@
 #include "Component/InventoryComponent.h"
 #include "Component/EquipComponent.h"
 #include "Component/SlotComponent.h"
+#include "Component/LockOnComponent.h"
 #include "ACGameplayTags.h"
 #include "Character/Player/ACPlayerController.h"
+#include "Widget/Status/Widget_Status.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AAbililtyCombatPlayerCharacter
@@ -65,6 +67,9 @@ AAbililtyCombatPlayerCharacter::AAbililtyCombatPlayerCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
+	// Create a LockOn Component
+	LockOnComponent = CreateDefaultSubobject<ULockOnComponent>(TEXT("LockOn Component"));
+	
 	// Create a Equip Component
 	EquipComponent = CreateDefaultSubobject<UEquipComponent>(TEXT("Equip Component"));
 
@@ -201,10 +206,18 @@ void AAbililtyCombatPlayerCharacter::SetupGASInputComponent()
 	{
 		UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent);
 
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &AAbililtyCombatPlayerCharacter::GASInputPressed, EACAbilityInputID::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &AAbililtyCombatPlayerCharacter::GASInputReleased, EACAbilityInputID::Jump);
+		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Started, this, &AAbililtyCombatPlayerCharacter::GASInputPressed, EACAbilityInputID::Run);
+		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Completed, this, &AAbililtyCombatPlayerCharacter::GASInputReleased, EACAbilityInputID::Run);
+
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AAbililtyCombatPlayerCharacter::GASInputPressed, EACAbilityInputID::Jump);
+		
+		EnhancedInputComponent->BindAction(LockOnAction, ETriggerEvent::Started, this, &AAbililtyCombatPlayerCharacter::GASInputPressed, EACAbilityInputID::LockOn);
 
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &AAbililtyCombatPlayerCharacter::GASInputPressed, EACAbilityInputID::Attack);
+		
+		EnhancedInputComponent->BindAction(DefenseAction, ETriggerEvent::Started, this, &AAbililtyCombatPlayerCharacter::GASInputPressed, EACAbilityInputID::Defense);
+		EnhancedInputComponent->BindAction(DefenseAction, ETriggerEvent::Completed, this, &AAbililtyCombatPlayerCharacter::GASInputReleased, EACAbilityInputID::Defense);
+		
 		EnhancedInputComponent->BindAction(WeaponAbilityAction, ETriggerEvent::Started, this, &AAbililtyCombatPlayerCharacter::GASInputPressed, EACAbilityInputID::Signature);
 	}
 }
@@ -238,6 +251,19 @@ void AAbililtyCombatPlayerCharacter::BindASCInput()
 
 		ASCInputBound = true;
 	}
+}
+
+void AAbililtyCombatPlayerCharacter::BindStatusWidgetFunction(UWidget_Status* InWidget)
+{
+	if (!InWidget || !ASC) return;
+
+	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetMaxHealthAttribute()).AddUObject(InWidget, &UWidget_Status::MaxHealthUpdated);
+	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetMaxManaAttribute()).AddUObject(InWidget, &UWidget_Status::MaxManaUpdated);
+	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetMaxStaminaAttribute()).AddUObject(InWidget, &UWidget_Status::MaxStaminaUpdated);
+
+	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetHealthAttribute()).AddUObject(InWidget, &UWidget_Status::HealthUpdated);
+	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetManaAttribute()).AddUObject(InWidget, &UWidget_Status::ManaUpdated);
+	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetStaminaAttribute()).AddUObject(InWidget, &UWidget_Status::StaminaUpdated);
 }
 
 void AAbililtyCombatPlayerCharacter::MagicStaff_Callback()

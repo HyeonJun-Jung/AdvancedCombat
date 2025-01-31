@@ -293,8 +293,7 @@ void USamuraiState::DealWithSamurai(float Damage, FDamageEvent const& DamageEven
 		if (DamageEvent.DamageTypeClass == UParryableDamage::StaticClass()
 			&& CombatCharacter->TagContainer.HasTag(TAG_CHARACTER_STATE_PARRYABLE))
 		{
-			Samurai->Delegate_Parried.Broadcast();
-			Samurai->ShowParriedReaction(hitDirection);
+			Samurai->Delegate_Parried.Broadcast(hitDirection);
 
 			AnimInst->Montage_Play(ParryMontage);
 		}
