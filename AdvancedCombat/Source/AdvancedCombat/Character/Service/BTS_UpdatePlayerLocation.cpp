@@ -10,6 +10,7 @@
 UBTS_UpdatePlayerLocation::UBTS_UpdatePlayerLocation()
 {
 	NodeName = "Update Player Location";
+	ForceInstancing(true);
 }
 
 void UBTS_UpdatePlayerLocation::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
