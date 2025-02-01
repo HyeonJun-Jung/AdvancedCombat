@@ -36,7 +36,12 @@ void UWidget_EquipSelect_ContentSlot::UpdateSlot(EItemCategory inCategory, const
 
 	UInventorySubsystem* InvSystem = GetGameInstance()->GetSubsystem<UInventorySubsystem>();
 	const FItemStruct* itemInfo = InvSystem->GetItemInfo(SlotData.ID);
-	if (!itemInfo) return;
+	if (!itemInfo || inData.Quantity <= 0)
+	{
+		Image_Item->SetVisibility(ESlateVisibility::Collapsed);
+		Text_Quantity->SetVisibility(ESlateVisibility::Collapsed);
+		return;
+	}
 
 	if (inData.Quantity > 0)
 	{
@@ -45,11 +50,6 @@ void UWidget_EquipSelect_ContentSlot::UpdateSlot(EItemCategory inCategory, const
 
 		Text_Quantity->SetText(UKismetTextLibrary::Conv_IntToText(inData.Quantity));
 		Text_Quantity->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-	}
-	else
-	{
-		Image_Item->SetVisibility(ESlateVisibility::Collapsed);
-		Text_Quantity->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
 
