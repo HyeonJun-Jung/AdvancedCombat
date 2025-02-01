@@ -127,3 +127,10 @@ enum class EUpgradeItemType : uint8
 	Staff,
 	Potion
 };
+
+UENUM(BlueprintType)
+enum class ESKM_MagicType : uint8
+{
+	FireBall,
+	FireArrow
+};

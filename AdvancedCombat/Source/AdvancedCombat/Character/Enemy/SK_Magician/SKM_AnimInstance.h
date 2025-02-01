@@ -8,7 +8,7 @@
 
 DECLARE_MULTICAST_DELEGATE(FSpawnMagic_Staff)
 DECLARE_MULTICAST_DELEGATE(FSpawnMagic_Hand)
-
+DECLARE_MULTICAST_DELEGATE(FTeleport)
 UCLASS()
 class ADVANCEDCOMBAT_API USKM_AnimInstance : public UCharacterBase_AnimInstance
 {
@@ -18,10 +18,14 @@ protected:
 	UFUNCTION()
 	void AnimNotify_SpawnMagic_Hand();
 
-	FSpawnMagic_Hand Delegate_SpawnMagic_Hand;
-
 	UFUNCTION()
 	void AnimNotify_SpawnMagic_Staff();
 
+	UFUNCTION()
+	void AnimNotify_Teleport();
+
+public:
+	FSpawnMagic_Hand Delegate_SpawnMagic_Hand;
 	FSpawnMagic_Staff Delegate_SpawnMagic_Staff;
+	FTeleport Delegate_Teleport;
 };

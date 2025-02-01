@@ -18,6 +18,7 @@ void AACProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	SetLifeSpan(LifeTime);
 }
 
 // Called every frame

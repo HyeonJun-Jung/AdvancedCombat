@@ -28,6 +28,9 @@ public:
 
 public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Meta = (ExposeOnSpawn = true))
+	float LifeTime = 5.f;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Meta = (ExposeOnSpawn = true))
 	float Range;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)

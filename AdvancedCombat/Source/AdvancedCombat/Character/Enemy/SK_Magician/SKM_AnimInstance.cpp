@@ -12,3 +12,8 @@ void USKM_AnimInstance::AnimNotify_SpawnMagic_Staff()
 {
 	Delegate_SpawnMagic_Staff.Broadcast();
 }
+
+void USKM_AnimInstance::AnimNotify_Teleport()
+{
+	Delegate_Teleport.Broadcast();
+}
