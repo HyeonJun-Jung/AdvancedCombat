@@ -17,6 +17,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void Tick(float fDeltaTime) override;
 
 /// <summary>
 /// Damaged
@@ -28,11 +29,15 @@ protected:
 	void HealthChanged(const FOnAttributeChangeData& Data);
 
 public:
-	TObjectPtr<class APatrolRoute> GetPatrolRoute() { return patrolRoute; }
+	class APatrolRoute* GetPatrolRoute() { return patrolRoute; }
+	class ABattleArea* GetBattleArea() { return battleArea; }
 
 protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Patrol")
 	TObjectPtr<class APatrolRoute> patrolRoute;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Battle")
+	TObjectPtr<class ABattleArea> battleArea;
 
 private:
 	void LimitMaxHeight(float maxHeight);
@@ -45,6 +50,14 @@ private:
 	FTimerHandle handle_LimitMaxHeight;
 	float maxHeight;
 
+	/// <summary>
+	/// Battle
+	/// </summary>
+
+protected:
+	UFUNCTION()
+	void OutOfArea_Callback(AActor* InActor);
+
 //	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Status")
 //	TSubclassOf<class UGameplayEffect> InitStatusEffect;
 //
@@ -53,15 +66,15 @@ private:
 //
 //	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Status")
 //	UCurveFloat* DamageCurve;
-//
-//	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "GAS_PROJECT|UI")
-//	TSubclassOf<class UWidget_FloatingStatusBar> UIFloatingStatusBarClass;
-//
-//	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "GAS_PROJECT|UI")
-//	class UWidgetComponent* UIFloatingStatusBarComponent;
-//
-//	UPROPERTY()
-//	class UWidget_FloatingStatusBar* UIFloatingStatusBar;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "GAS_PROJECT|UI")
+	TSubclassOf<class UWidget_FloatingStatusBar> UIFloatingStatusBarClass;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "GAS_PROJECT|UI")
+	class UWidgetComponent* UIFloatingStatusBarComponent;
+
+	UPROPERTY()
+	class UWidget_FloatingStatusBar* UIFloatingStatusBar;
 
 	FDelegateHandle HealthChangedDelegateHandle;
 };

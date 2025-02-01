@@ -17,6 +17,8 @@ UPatrolComponent::UPatrolComponent()
 
 	InterpPatrolFloat.BindUFunction(this, FName("PatrolTimelineUpdated"));
 	InterpPatrolFinished.BindUFunction(this, FName("PatrolTimelineFinished"));
+
+	patrolfCurve = LoadObject<UCurveFloat>(this, TEXT("/Script/Engine.CurveFloat'/Game/AdvancedCombat/Characters/Enemy/Curve/Curve_Patrol.Curve_Patrol'"));
 }
 
 

@@ -2,6 +2,7 @@
 
 
 #include "Character/Enemy/Enemy_Base.h"
+#include "Character/Enemy/EnemyBase_AIController.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Character/Ability/ACAbilitySystemComponent.h"
@@ -12,6 +13,12 @@
 #include "Engine/DamageEvents.h"
 #include "Character/DamageType/DamageTypes.h"
 #include "Actor/PatrolRoute.h"
+#include "Actor/BattleArea.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include "Widget/Status/Widget_FloatingStatusBar.h"
+#include "Component/FloatingStatusBarComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 
 AEnemy_Base::AEnemy_Base()
 {
@@ -41,17 +48,17 @@ AEnemy_Base::AEnemy_Base()
 	AttributeSetBase = CreateDefaultSubobject<UACAttributeSet_Base>(TEXT("AttributeSet"));
 
 	// Status Widget Component
-	/*UIFloatingStatusBarComponent = CreateDefaultSubobject<UFloatingStatusBarComponent>(FName("UIFloatingStatusBarComponent"));
+	UIFloatingStatusBarComponent = CreateDefaultSubobject<UFloatingStatusBarComponent>(FName("Status Bar Component"));
 	UIFloatingStatusBarComponent->SetupAttachment(RootComponent);
-	UIFloatingStatusBarComponent->SetRelativeLocation(FVector(0, 0, 120));
-	UIFloatingStatusBarComponent->SetWidgetSpace(EWidgetSpace::Screen);
-	UIFloatingStatusBarComponent->SetDrawSize(FVector2D(500, 500));
+	UIFloatingStatusBarComponent->SetRelativeLocation(FVector(0, 0, 105));
+	UIFloatingStatusBarComponent->SetWidgetSpace(EWidgetSpace::World);
+	UIFloatingStatusBarComponent->SetDrawSize(FVector2D(175, 15));
 
-	UIFloatingStatusBarClass = StaticLoadClass(UObject::StaticClass(), nullptr, TEXT("/Game/GAS_Project/DefenseGame/Widget/WBP_FloatingStatusBar_Monster.WBP_FloatingStatusBar_Monster_C"));
+	UIFloatingStatusBarClass = StaticLoadClass(UObject::StaticClass(), nullptr, TEXT("/Game/AdvancedCombat/Widget/Game/Status/WBP_FloatingStatusBar.WBP_FloatingStatusBar_C"));
 	if (!UIFloatingStatusBarClass)
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s() Failed to find UIFloatingStatusBarClass. If it was moved, please update the reference location in C++."), *FString(__FUNCTION__));
-	}*/
+	}
 }
 
 void AEnemy_Base::BeginPlay()
@@ -72,23 +79,23 @@ void AEnemy_Base::BeginPlay()
 		AddCharacterAbilities();
 
 		// Setup FloatingStatusBar UI for Locally Owned Players only, not AI or the server's copy of the PlayerControllers
-		//APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-		//if (PC && PC->IsLocalPlayerController())
-		//{
-		//	if (UIFloatingStatusBarClass)
-		//	{
-		//		UIFloatingStatusBar = CreateWidget<UWidget_FloatingStatusBar>(PC, UIFloatingStatusBarClass);
-		//		if (UIFloatingStatusBar && UIFloatingStatusBarComponent)
-		//		{
-		//			UIFloatingStatusBarComponent->SetWidget(UIFloatingStatusBar);
+		APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+		if (PC && PC->IsLocalPlayerController())
+		{
+			if (UIFloatingStatusBarClass)
+			{
+				UIFloatingStatusBar = CreateWidget<UWidget_FloatingStatusBar>(PC, UIFloatingStatusBarClass);
+				if (UIFloatingStatusBar && UIFloatingStatusBarComponent)
+				{
+					UIFloatingStatusBarComponent->SetWidget(UIFloatingStatusBar);
 
-		//			// Setup the floating status bar
-		//			UIFloatingStatusBar->SetHealthPercentage(GetHealth() / GetMaxHealth());
+					// Setup the floating status bar
+					UIFloatingStatusBar->SetHealthPercentage(GetHealth() / GetMaxHealth());
 
-		//			UIFloatingStatusBar->SetCharacterName(CharacterName);
-		//		}
-		//	}
-		//}
+					UIFloatingStatusBar->SetCharacterName(CharacterName);
+				}
+			}
+		}
 
 		// Attribute change callbacks
 		HealthChangedDelegateHandle = ASC->GetGameplayAttributeValueChangeDelegate(AttributeSetBase->GetHealthAttribute()).AddUObject(this, &AEnemy_Base::HealthChanged);
@@ -96,6 +103,16 @@ void AEnemy_Base::BeginPlay()
 		// Tag change callbacks
 		// ASC->RegisterGameplayTagEvent(FGameplayTag::RequestGameplayTag(FName("State.Debuff.Stun")), EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AGPMinion::StunTagChanged);
 	}
+
+	if (IsValid(battleArea))
+	{
+		battleArea->Delegate_OutOfArea.AddUObject(this, &AEnemy_Base::OutOfArea_Callback);
+	}
+}
+
+void AEnemy_Base::Tick(float fDeltaTime)
+{
+	Super::Tick(fDeltaTime);
 }
 
 void AEnemy_Base::HealthChanged(const FOnAttributeChangeData& Data)
@@ -105,10 +122,10 @@ void AEnemy_Base::HealthChanged(const FOnAttributeChangeData& Data)
 	float Health = Data.NewValue;
 
 	// Update floating status bar
-	/*if (UIFloatingStatusBar)
+	if (UIFloatingStatusBar)
 	{
 		UIFloatingStatusBar->SetHealthPercentage(Health / GetMaxHealth());
-	}*/
+	}
 
 	// If the minion died, handle death
 	/*if (!IsAlive() && !ASC->HasMatchingGameplayTag(DeadTag))
@@ -220,4 +237,16 @@ void AEnemy_Base::GetUpFromGround(const FHitResult& hit)
 			LandedDelegate.RemoveDynamic(this, &AEnemy_Base::GetUpFromGround);
 		},
 		0.2f, false);
+}
+
+void AEnemy_Base::OutOfArea_Callback(AActor* InActor)
+{
+	if (InActor != this) return;
+
+	AEnemyBase_AIController* AC = Cast<AEnemyBase_AIController>(GetController());
+	if (!AC) return;
+	UBlackboardComponent* BBC = AC->GetBlackboardComponent();
+	if (!BBC) return;
+
+	BBC->SetValueAsObject(AC->BBKey_Target, nullptr);
 }
