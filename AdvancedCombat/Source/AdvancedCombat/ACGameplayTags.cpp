@@ -43,6 +43,11 @@ void FACGameplayTags::InitializeNativeGameplayTags()
 		FString("Running")
 	);
 
+	GameplayTags.Character_State_Invincible = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Character.State.Invincible"),
+		FString("Invincible")
+	);
+
 	GameplayTags.Character_Ability_Run = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Character.Ability.Run"),
 		FString("Run")

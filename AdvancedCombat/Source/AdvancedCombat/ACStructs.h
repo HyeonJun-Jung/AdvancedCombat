@@ -74,10 +74,7 @@ struct ADVANCEDCOMBAT_API FItemStruct : public FTableRowBase
 	FTransform RelativeTransform;
 
 	UPROPERTY(EditAnywhere, Category = "Equip Data")
-	TSubclassOf<UGameplayAbility> AttackAbilityClass;
-
-	UPROPERTY(EditAnywhere, Category = "Equip Data")
-	TSubclassOf<UGameplayAbility> SignatureAbilityClass;
+	TMap<EACAbilityInputID, TSubclassOf<UGameplayAbility>> Abilities;
 };
 
 USTRUCT(BlueprintType)

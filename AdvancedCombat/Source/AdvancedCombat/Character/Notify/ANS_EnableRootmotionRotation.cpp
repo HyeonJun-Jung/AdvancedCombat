@@ -11,6 +11,7 @@ void UANS_EnableRootmotionRotation::NotifyBegin(USkeletalMeshComponent* MeshComp
 	character = Cast<ACharacter>(MeshComp->GetOwner());
 	if (!IsValid(character) || !character->GetMovementComponent()) return;
 	character->GetCharacterMovement()->bAllowPhysicsRotationDuringAnimRootMotion = true;
+	character->bUseControllerRotationYaw = true;
 }
 
 void UANS_EnableRootmotionRotation::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
@@ -19,4 +20,5 @@ void UANS_EnableRootmotionRotation::NotifyEnd(USkeletalMeshComponent* MeshComp, 
 
 	if (!IsValid(character) || !IsValid(character->GetMovementComponent())) return;
 	character->GetCharacterMovement()->bAllowPhysicsRotationDuringAnimRootMotion = false;
+	character->bUseControllerRotationYaw = false;
 }

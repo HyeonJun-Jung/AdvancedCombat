@@ -82,25 +82,15 @@ void UEquipComponent::EquipItem(const FItemStruct& InItem)
 		UAbilitySystemComponent* ASC = Player->GetAbilitySystemComponent();
 		if (ASC)
 		{
-			if (InItem.AttackAbilityClass)
+			for (auto& GAInfo : InItem.Abilities)
 			{
 				// Remove Before Ability
-				ASC->ClearAllAbilitiesWithInputID(static_cast<int32>(EACAbilityInputID::Attack));
+				ASC->ClearAllAbilitiesWithInputID(static_cast<int32>(GAInfo.Key));
 
-				// Give Abililty
-				FGameplayAbilitySpec AbililtySpec(InItem.AttackAbilityClass);
-				AbililtySpec.InputID = static_cast<int32>(EACAbilityInputID::Attack);
-				ASC->GiveAbility(AbililtySpec);
-			}
-
-			if (InItem.SignatureAbilityClass)
-			{
-				// Remove Before Ability
-				ASC->ClearAllAbilitiesWithInputID(static_cast<int32>(EACAbilityInputID::Signature));
-
-				FGameplayAbilitySpec AbililtySpec(InItem.SignatureAbilityClass);
-				AbililtySpec.InputID = static_cast<int32>(EACAbilityInputID::Signature);
-				ASC->GiveAbility(AbililtySpec);
+				FGameplayAbilitySpec AbililtySpec(GAInfo.Value);
+				AbililtySpec.InputID = static_cast<int32>(GAInfo.Key);
+				if(AbililtySpec.Handle.IsValid())
+					ASC->GiveAbility(AbililtySpec);
 			}
 		}
 	}

@@ -18,6 +18,7 @@ public:
 	const FName BBKey_Target = FName("Target");
 	const FName BBKey_TargetLocation = FName("TargetLocation");
 	const FName BBKey_TargetDistance = FName("TargetDistance");
+	const FName BBKey_Stunned = FName("Stunned");
 
 public:
 	AEnemyBase_AIController(FObjectInitializer const& object_initializer);

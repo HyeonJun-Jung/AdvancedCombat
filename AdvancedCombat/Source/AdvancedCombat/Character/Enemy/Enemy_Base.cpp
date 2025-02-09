@@ -140,6 +140,7 @@ float AEnemy_Base::TakeDamage(float Damage, FDamageEvent const& DamageEvent, ACo
 
 	if (damage > 0)
 	{
+		SetHealth(GetHealth() - damage);
 		DealWithDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 	}
 	
@@ -173,18 +174,32 @@ void AEnemy_Base::DealWithDamage(float Damage, FDamageEvent const& DamageEvent, 
 	// Air Combo
 	if (DamageEvent.DamageTypeClass == UAirborneDamage::StaticClass())
 	{
+		// Stop Character
+		GetCharacterMovement()->StopMovementImmediately();
+		SetStunned(true, 0.5f);
+
+		// Launch Character
 		LaunchCharacter(FVector(0, 0, 2500), false, false);
 		LimitMaxHeight(GetActorLocation().Z + 750.f);
+
+		// Show Hit Reaction
 		ShowHitReaction_Inplace(hitDirection);
 	}
 	else if (DamageEvent.DamageTypeClass == UInAirDamage::StaticClass())
 	{
+		// Stop Character
 		GetCharacterMovement()->Velocity.Z = 0;
 		DisableGravity(0.2f);
+		SetStunned(true, 0.2f);
+
+		// Show Hit Reaction
 		ShowHitReaction_Inplace(hitDirection);
 	}
 	else if (DamageEvent.DamageTypeClass == UHitDownDamage::StaticClass())
 	{
+		// Stop Character
+		SetStunned(true, 0.3f);
+
 		GetCharacterMovement()->GravityScale = 1.f;
 		LaunchCharacter(FVector(0, 0, -1250), false, false);
 
@@ -193,6 +208,8 @@ void AEnemy_Base::DealWithDamage(float Damage, FDamageEvent const& DamageEvent, 
 
 		LandedDelegate.AddDynamic(this, &AEnemy_Base::GetUpFromGround);
 	}
+
+	// Normal Damage
 	else
 	{
 		ShowHitReaction(hitDirection);
@@ -237,6 +254,27 @@ void AEnemy_Base::GetUpFromGround(const FHitResult& hit)
 			LandedDelegate.RemoveDynamic(this, &AEnemy_Base::GetUpFromGround);
 		},
 		0.2f, false);
+}
+void AEnemy_Base::SetStunned(bool InValue, float InTime)
+{
+	AEnemyBase_AIController* AC = Cast<AEnemyBase_AIController>(GetController());
+	if (!AC) return;
+	UBlackboardComponent* BBC = AC->GetBlackboardComponent();
+	if (!BBC) return;
+
+	BBC->SetValueAsBool(AC->BBKey_Stunned, InValue);
+
+	StunTimer.Invalidate();
+	GetWorldTimerManager().SetTimer(StunTimer, 
+		[&]() 
+		{
+			AEnemyBase_AIController* InAC = Cast<AEnemyBase_AIController>(GetController());
+			if (!InAC) return;
+			UBlackboardComponent* InBBC = InAC->GetBlackboardComponent();
+			if (!InBBC) return;
+			InBBC->SetValueAsBool(InAC->BBKey_Stunned, false);
+		},
+		InTime, false);
 }
 
 void AEnemy_Base::OutOfArea_Callback(AActor* InActor)

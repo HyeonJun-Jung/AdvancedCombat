@@ -23,6 +23,7 @@ public:
 	FGameplayTag Character_State_Jumping;
 	FGameplayTag Character_State_Parryable;
 	FGameplayTag Character_State_Running;
+	FGameplayTag Character_State_Invincible;
 
 	// Ability
 	FGameplayTag Character_Ability_Run;

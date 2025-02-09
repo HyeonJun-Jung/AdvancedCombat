@@ -5,6 +5,8 @@
 #include "Character/Character_Base.h"
 #include "GameplayEffect.h"
 #include "GameplayEffectExtension.h"
+#include "ACGameplayTags.h"
+
 UACAttributeSet_Base::UACAttributeSet_Base()
 {
 	static ConstructorHelpers::FClassFinder<UGameplayEffect> LevelUpEffectRef(TEXT("/Game/GAS_Project/DefenseGame/Player/Level/BPGE_LevelUp.BPGE_LevelUp_C"));
@@ -93,6 +95,12 @@ void UACAttributeSet_Base::PostGameplayEffectExecute(const FGameplayEffectModCal
 
 	if (Data.EvaluatedData.Attribute == GetDamageAttribute())
 	{
+		// Check Invincible
+		if (GetOwningAbilitySystemComponent()->HasMatchingGameplayTag(FACGameplayTags::Get().Character_State_Invincible))
+		{
+			return;
+		}
+
 		// Try to extract a hit result
 		FHitResult HitResult;
 		if (Context.GetHitResult())
@@ -134,6 +142,12 @@ void UACAttributeSet_Base::PostGameplayEffectExecute(const FGameplayEffectModCal
 	}// Damage
 	else if (Data.EvaluatedData.Attribute == GetReactableDamageAttribute())
 	{
+		// Check Invincible
+		if (GetOwningAbilitySystemComponent()->HasMatchingGameplayTag(FACGameplayTags::Get().Character_State_Invincible))
+		{
+			return;
+		}
+
 		// Try to extract a hit result
 		FHitResult HitResult;
 		if (Context.GetHitResult())

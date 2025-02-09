@@ -33,6 +33,7 @@ enum class EACAbilityInputID : uint8
 	Jump			UMETA(DisplayName = "Jump"),
 	Run				UMETA(DisplayName = "Run"),
 	LockOn			UMETA(DisplayName = "LockOn"),
+	Roll			UMETA(DisplayName = "Roll"),
 	Attack			UMETA(DisplayName = "Attack"),
 	Defense			UMETA(DisplayName = "Defense"),
 	Aiming			UMETA(DisplayName = "Aiming"),

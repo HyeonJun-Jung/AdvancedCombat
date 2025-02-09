@@ -64,6 +64,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
+	/** Roll Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* RollAction;
+
 	/** Attack Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LockOnAction;
@@ -99,6 +103,14 @@ public:
 	virtual void PossessedBy(AController* NewController) override;
 
 protected:
+	UFUNCTION(BlueprintImplementableEvent)
+	void TraversalMove(float ActionValueX, float ActionValueY);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void TraversalMoveEnd();
+
+	void MoveEnded(const FInputActionValue& Value);
+
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
 

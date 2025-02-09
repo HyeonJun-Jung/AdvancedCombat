@@ -187,6 +187,8 @@ void AAbililtyCombatPlayerCharacter::SetupPlayerInputComponent(UInputComponent* 
 
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AAbililtyCombatPlayerCharacter::Move);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &AAbililtyCombatPlayerCharacter::MoveEnded);
+
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AAbililtyCombatPlayerCharacter::Look);
@@ -211,6 +213,8 @@ void AAbililtyCombatPlayerCharacter::SetupGASInputComponent()
 
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AAbililtyCombatPlayerCharacter::GASInputPressed, EACAbilityInputID::Jump);
 		
+		EnhancedInputComponent->BindAction(RollAction, ETriggerEvent::Started, this, &AAbililtyCombatPlayerCharacter::GASInputPressed, EACAbilityInputID::Roll);
+
 		EnhancedInputComponent->BindAction(LockOnAction, ETriggerEvent::Started, this, &AAbililtyCombatPlayerCharacter::GASInputPressed, EACAbilityInputID::LockOn);
 
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &AAbililtyCombatPlayerCharacter::GASInputPressed, EACAbilityInputID::Attack);
@@ -323,37 +327,43 @@ void AAbililtyCombatPlayerCharacter::GASInputReleased(EACAbilityInputID InputId)
 	}
 }
 
+void AAbililtyCombatPlayerCharacter::MoveEnded(const FInputActionValue& Value)
+{
+	TraversalMoveEnd();
+}
+
 void AAbililtyCombatPlayerCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
+	TraversalMove(MovementVector.X, MovementVector.Y);
 
-	if (Controller != nullptr)
-	{
-		// find out which way is forward
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
+	//if (Controller != nullptr)
+	//{
+	//	// find out which way is forward
+	//	const FRotator Rotation = Controller->GetControlRotation();
+	//	const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-		// get forward vector
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+	//	// get forward vector
+	//	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 
-		// get right vector 
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+	//	// get right vector 
+	//	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
-		// add movement 
-		AddMovementInput(ForwardDirection, MovementVector.Y);
-		AddMovementInput(RightDirection, MovementVector.X);
+	//	// add movement 
+	//	AddMovementInput(ForwardDirection, MovementVector.Y);
+	//	AddMovementInput(RightDirection, MovementVector.X);
 
-		if (GetMovementComponent()->IsFlying())
-		{
-			const FVector UpDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Z);
+	//	if (GetMovementComponent()->IsFlying())
+	//	{
+	//		const FVector UpDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Z);
 
-			if (Rotation.Pitch < 90)
-				AddMovementInput(FVector(0, 0, 1), 1);
-			else if (Rotation.Pitch > 270)
-				AddMovementInput(FVector(0, 0, 1), -1);
-		}
-	}
+	//		if (Rotation.Pitch < 90)
+	//			AddMovementInput(FVector(0, 0, 1), 1);
+	//		else if (Rotation.Pitch > 270)
+	//			AddMovementInput(FVector(0, 0, 1), -1);
+	//	}
+	//}
 }
 
 void AAbililtyCombatPlayerCharacter::Look(const FInputActionValue& Value)

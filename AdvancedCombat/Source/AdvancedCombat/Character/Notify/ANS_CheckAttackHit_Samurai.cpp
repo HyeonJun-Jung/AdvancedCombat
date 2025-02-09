@@ -11,11 +11,13 @@
 
 void UANS_CheckAttackHit_Samurai::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
-
+    Super::NotifyBegin(MeshComp, Animation, TotalDuration);
 }
 
 void UANS_CheckAttackHit_Samurai::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime, const FAnimNotifyEventReference& EventReference)
 {
+    Super::NotifyTick(MeshComp, Animation, FrameDeltaTime);
+
     TArray<FHitResult> hitResults;
     FVector Start = MeshComp->GetSocketLocation(StartSocket);
     FVector End = MeshComp->GetSocketLocation(EndSocket);

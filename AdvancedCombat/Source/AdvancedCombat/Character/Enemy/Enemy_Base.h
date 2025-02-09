@@ -55,6 +55,9 @@ private:
 	/// </summary>
 
 protected:
+	void SetStunned(bool InValue, float InTime);
+	FTimerHandle StunTimer;
+
 	UFUNCTION()
 	void OutOfArea_Callback(AActor* InActor);
 
